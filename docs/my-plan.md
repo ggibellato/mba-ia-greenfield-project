@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-03 — Steps 0–2 merged (PR #5, #6, #7); Step 3 (Plan Context) done, PR #8 pending review._
+_Last updated: 2026-07-03 — Steps 0–2 merged (PR #5, #6, #7); Step 3 reviewed and approved on PR #8, pending merge._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -41,7 +41,7 @@ _Last updated: 2026-07-03 — Steps 0–2 merged (PR #5, #6, #7); Step 3 (Plan C
   - [x] `docs/phases/phase-03-videos/context.md` created via 5 parallel subagents; Filter Trace verification passed
   - [x] Correlated decision confirmed for inclusion: `openapi-docs-nestjs` (high relevance); 3 low/medium candidates excluded
   - [x] No UI scope detected — no `## UI Inventory` section emitted, per `docs/exercise.md`'s backend-only framing
-  - [x] Branch `feature/p03-s03-plan-context` committed, pushed, PR [#8](https://github.com/ggibellato/mba-ia-greenfield-project/pull/8) opened against `dev` — pending manual review
+  - [x] Branch `feature/p03-s03-plan-context` committed, pushed, PR [#8](https://github.com/ggibellato/mba-ia-greenfield-project/pull/8) opened against `dev`, reviewed and approved — pending merge
 - [ ] **Step 4 — Plan Validate, round 1** (`/plan-validate 03`)
   - [ ] `docs/phases/phase-03-videos/validation.md` created with a verdict
 - [ ] **Step 5 — Plan Resolve, round 1** (`/plan-resolve 03`)
@@ -114,7 +114,7 @@ The exercise mandates these decisions be covered (already scoped into the skill 
 
 **Checkpoint:** review the generated decisions doc before moving on — `**Decision:**` fields are expected to remain `_[pending]_` at the end of this step (that's `/plan-resolve`'s job, in Step 5). Confirm the recommendations themselves are sound, especially the queue choice.
 
-## Step 3 — Plan Context (done, PR pending review)
+## Step 3 — Plan Context (done, reviewed)
 
 PR [#8](https://github.com/ggibellato/mba-ia-greenfield-project/pull/8): `docs/phases/phase-03-videos/context.md` produced — pure consolidation (Scope, Decisions Index, Capability Coverage, Decisions Detail, Inherited Decisions Detail from Phases 01–02 + the correlated `openapi-docs-nestjs` doc, Inherited Conventions, Non-UI/Deferred Capabilities, Testing Requirements). No UI Inventory section — Phase 03 is backend-only per the exercise ("Há um frontend no repositório, mas a interface de vídeo não faz parte do escopo desta fase").
 
