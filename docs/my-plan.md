@@ -1,16 +1,29 @@
 # Plan: Execute Phase 03 — Upload e Processamento de Vídeos (`docs/exercise.md`)
 
+## Branching & PR Strategy
+
+Each Step of this plan (0–4) gets its own branch and its own PR, merged sequentially into `dev` — not a single `feature/phase-03-videos` branch for the whole phase.
+
+- **Branch naming:** `feature/p03-sNN-<slug>` (zero-padded step number, matching the Step numbers used in this plan). E.g. `feature/p03-s00-setup`, `feature/p03-s01-research`, `feature/p03-s02-planning`, `feature/p03-s03-implementation`, `feature/p03-s04-closure`.
+- **Flow:** cut the step's branch from up-to-date `dev` → do the step's work → commit → push → open a PR against `dev` → PR is reviewed/merged → next step's branch is cut from the now-updated `dev`. Never stack a new step's branch on an unmerged one.
+- **Scope of each PR:** only the artifacts/code that belong to that step (e.g. Step 0's PR touches `.mcp.json` and this plan file, not application code).
+
 ## Progress Tracker
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-03 — plan created, no execution started yet._
+_Last updated: 2026-07-03 — Step 0 complete, baseline green, PR pending._
 
-- [ ] **Step 0 — Setup**
-  - [ ] context7 registered in `.mcp.json` and verified via `claude mcp list`
-  - [ ] Branch `feature/phase-03-videos` cut from `dev`
-  - [ ] Docker stack up (`nestjs-api`, `db`, `mailpit`), deps installed in-container, migrations run
-  - [ ] Baseline suite green: `npm test`, `npm run test:e2e`, `npx tsc --noEmit`, `npm run lint`
+- [x] **Step 0 — Setup**
+  - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
+  - [x] Branch `feature/p03-s00-setup` cut from `dev`
+  - [x] Docker stack up (`nestjs-api`, `db`, `mailpit`), deps installed in-container, migrations run
+  - [x] Baseline suite green: `npm test` (23 suites/144 tests), `npm run test:e2e` (3 suites/52 tests), `npx tsc --noEmit`, `npm run lint` — all pass
+  - Notes on unplanned fixes needed to reach a green baseline:
+    - `nestjs-project/.env` didn't exist (only `.env.example`, gitignored) — `DB_HOST` fell back to `localhost` instead of the Compose service name `db`, breaking migrations. Created `.env` from `.env.example`.
+    - `.env.example`'s `MAIL_FROM` value was malformed (`"StreamTube" <noreply@streamtube.com>` — quotes only wrapped the first word), which broke `dotenv` parsing entirely. Fixed to quote the whole value, per the pattern `nestjs-project/CLAUDE.md` already documents.
+    - `src/database/migrations.integration-spec.ts`'s `beforeAll` dropped the 4 managed tables but not the `verification_tokens_type_enum` type `CreateAuthTokens` creates, so re-running migrations against an already-migrated DB failed on `CREATE TYPE`. Added a `DROP TYPE IF EXISTS` before the migration re-run.
+    - `npm run lint` was already broken on `dev` (190 problems, unrelated to Phase 03) — fixed separately on `bugfix/phase-02-auth-lint`, PR [#4](https://github.com/ggibellato/mba-ia-greenfield-project/pull/4), merged into `dev` before this branch's own baseline check.
 - [ ] **Step 1 — Research**
   - [ ] `/research` run → `docs/decisions/technical-decisions-phase-03-videos.md` created
   - [ ] All TDs have a filled `**Decision:**` (queue tech, upload strategy, worker model, unique-URL/streaming, status lifecycle) — none left `_[pending]_`
@@ -32,7 +45,7 @@ _Last updated: 2026-07-03 — plan created, no execution started yet._
   - [ ] Root `CLAUDE.md` updated (queue/storage/worker no longer "TBD")
   - [ ] Full Definition of Done green (whole suite + tsc + lint)
   - [ ] Every `docs/exercise.md` acceptance-criteria checkbox walked and confirmed
-  - [ ] Committed on `feature/phase-03-videos`; PR to `dev` opened only after explicit go-ahead
+  - [ ] Committed on `feature/p03-s04-closure`; PR to `dev` opened per the per-step branching strategy above
 
 ---
 
@@ -64,7 +77,7 @@ Key facts gathered during exploration (no re-derivation needed later):
 ## Step 0 — Setup
 
 1. Register **context7** in the repo-root `.mcp.json` — that's where `postgres` is currently declared (`nestjs-project/.mcp.json` doesn't exist). Add a standard `npx -y @upstash/context7-mcp` stdio server entry alongside the existing `postgres` entry. Verify connectivity with `claude mcp list` before proceeding to research.
-2. Cut branch `feature/phase-03-videos` from `dev` (`git checkout dev && git pull && git checkout -b feature/phase-03-videos`) — Git Flow per CLAUDE.md; never work on `main` or continue on `feature/add-exercise-md`.
+2. Cut branch `feature/p03-s00-setup` from `dev` (`git checkout dev && git pull && git checkout -b feature/p03-s00-setup`) — Git Flow per CLAUDE.md; never work on `main` or continue on `feature/add-exercise-md`. Per the Branching & PR Strategy above, this branch gets its own PR to `dev` at the end of Step 0.
 3. Bring the stack up: `cd nestjs-project && docker compose up -d`, then `docker compose exec nestjs-api npm install`, then run migrations (`npm run migration:run` inside the container).
 4. Confirm baseline is green before adding anything: `npm test`, `npm run test:e2e`, `npx tsc --noEmit`, `npm run lint` — all must pass on the untouched Phase 01/02 code. This is the regression baseline for the final Definition-of-Done check in Step 4.
 
@@ -109,7 +122,7 @@ Run `/implement 03`, SI by SI, per the plan's Dependency Map. Each SI: implement
 2. Update root `CLAUDE.md` — mark the Video Worker/Object Storage/Message Queue containers in the Architecture section as implemented, with the concrete tech chosen in research (replacing "TBD").
 3. Full Definition of Done: `npm test`, `npm run test:e2e`, `npx tsc --noEmit` (exit 0), `npm run lint` — all green, whole suite (not just Phase 03's own tests).
 4. Walk every checkbox in `docs/exercise.md`'s "Critérios de Aceite" section explicitly against the delivered artifacts/code before considering the phase done.
-5. Commit on `feature/phase-03-videos` with short descriptive commits (never direct to `main`); push to `origin` and open the PR against `dev` only after explicit go-ahead at that point.
+5. Commit on `feature/p03-s04-closure` with short descriptive commits (never direct to `main`); push to `origin` and open the PR against `dev`.
 
 ---
 
@@ -119,4 +132,4 @@ Run `/implement 03`, SI by SI, per the plan's Dependency Map. Each SI: implement
 - After Step 1: `docs/decisions/technical-decisions-phase-03-videos.md` exists, every TD has a filled `**Decision:**` (no `_[pending]_` left), covers all 5 exercise-mandated decision points.
 - After Step 2: `docs/phases/phase-03-videos/validation.md` frontmatter reads `status: clean`; `phase-03-videos.md` contains numbered SI-03.x sections plus Data Model/API Contracts/Authorization Matrix/Error Catalog/Events-Messages/Dependency Map/Deliverables.
 - After Step 3, per SI: the SI's own test files pass in isolation, then full `npm test`/`npm run test:e2e` re-run to catch regressions before moving to the next SI. Manually exercise at minimum one upload → processing → streaming round trip against the running Compose stack (e.g. via curl/Postman) once the relevant SIs land, since automated e2e tests won't cover a real 10GB file.
-- After Step 4: every `docs/exercise.md` acceptance-criteria checkbox verified true; full DoD commands green; `git log` shows work only on `feature/phase-03-videos`, no commits on `main`.
+- After Step 4: every `docs/exercise.md` acceptance-criteria checkbox verified true; full DoD commands green; `git log` shows work only on `feature/p03-sNN-*` step branches, no commits on `main`.
