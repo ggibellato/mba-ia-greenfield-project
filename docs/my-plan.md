@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-03 — Steps 0–7 merged (PR #5–#12); Step 8 (Plan Resolve, round 1) done, PR #13 pending review — all 7 decisions made._
+_Last updated: 2026-07-03 — Steps 0–7 merged (PR #5–#12); Step 8 reviewed and approved on PR #13, pending merge — all 7 decisions made._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -59,7 +59,7 @@ _Last updated: 2026-07-03 — Steps 0–7 merged (PR #5–#12); Step 8 (Plan Res
   - [x] All 7 decisions answered via `AskUserQuestion` (2 batches) — every choice matched its doc's own Recommendation (TD-01=A, TD-02=B, TD-03=A, TD-04=B, TD-05=A, TD-06=B, thumbnail-frame-selection/TD-01=A)
   - [x] Both decisions docs flipped to `status: decided`; `context.md` Decisions Index + Detail rewritten (Filter Trace verification passed); `validation.md` issue_count: 0 (status left `dirty` — validate decides `clean`)
   - [x] `library-refs.md` created — `@nestjs/bullmq`, `bullmq`, `minio`, `fluent-ffmpeg` docs fetched via context7
-  - [x] Branch `feature/p03-s08-plan-resolve-r1` committed, pushed, PR [#13](https://github.com/ggibellato/mba-ia-greenfield-project/pull/13) opened against `dev` — pending manual review
+  - [x] Branch `feature/p03-s08-plan-resolve-r1` committed, pushed, PR [#13](https://github.com/ggibellato/mba-ia-greenfield-project/pull/13) opened against `dev`, reviewed and approved — pending merge
 - [ ] **Steps 9+ — Validate/Resolve, round 2, 3, …** (only if round 1 doesn't reach clean)
   - [ ] Repeat `/plan-validate 03` ↔ `/plan-resolve 03`, one step each, until `validation.md` reads `status: clean` — add rows here as rounds happen
 - [ ] **Step N — Plan Build** (`/plan-build 03`)
@@ -148,7 +148,7 @@ PR [#11](https://github.com/ggibellato/mba-ia-greenfield-project/pull/11): reagg
 
 PR [#12](https://github.com/ggibellato/mba-ia-greenfield-project/pull/12): confirmed `MD-1` is resolved (moved to `## Resolved Issues`, `resolved_by: thumbnail-frame-selection/TD-01`) and no new issues were introduced. `status: dirty` still — all 7 decisions (6 original + 1 new) remain pending, now all as `OQ-N` — but zero `MD-N`, so Step 8 (`/plan-resolve`) is unblocked.
 
-## Step 8 — Plan Resolve, round 1 (done, PR pending review)
+## Step 8 — Plan Resolve, round 1 (done, reviewed)
 
 PR [#13](https://github.com/ggibellato/mba-ia-greenfield-project/pull/13): all 7 pending `**Decision:**` fields filled via `AskUserQuestion` (2 batches of up to 4), every choice matching its doc's own Recommendation. Decisions doc(s) + `context.md` patched, `validation.md` issues moved to Resolved, `library-refs.md` written for the 4 newly decided libraries via context7. **This is where the actual architecture decisions got made** — not in Step 2 or Step 5.
 
