@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-03 — Step 0 merged (PR #5); Step 1 (this restructuring) in progress on `feature/p03-s01-replan`._
+_Last updated: 2026-07-03 — Step 0 merged (PR #5); Step 1 reviewed and approved on PR #6, pending merge._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -29,10 +29,10 @@ _Last updated: 2026-07-03 — Step 0 merged (PR #5); Step 1 (this restructuring)
     - `.env.example`'s `MAIL_FROM` value was malformed (`"StreamTube" <noreply@streamtube.com>` — quotes only wrapped the first word), which broke `dotenv` parsing entirely. Fixed to quote the whole value, per the pattern `nestjs-project/CLAUDE.md` already documents.
     - `src/database/migrations.integration-spec.ts`'s `beforeAll` dropped the 4 managed tables but not the `verification_tokens_type_enum` type `CreateAuthTokens` creates, so re-running migrations against an already-migrated DB failed on `CREATE TYPE`. Added a `DROP TYPE IF EXISTS` before the migration re-run.
     - `npm run lint` was already broken on `dev` (190 problems, unrelated to Phase 03) — fixed separately on `bugfix/phase-02-auth-lint`, PR [#4](https://github.com/ggibellato/mba-ia-greenfield-project/pull/4), merged into `dev` before this branch's own baseline check.
-- [ ] **Step 1 — Re-plan** (this document's restructuring)
+- [x] **Step 1 — Re-plan** (this document's restructuring)
   - [x] Rewrite Branching & PR Strategy to one-step-per-skill-invocation
   - [x] Rewrite Progress Tracker and per-step narrative sections below to match
-  - [ ] Branch `feature/p03-s01-replan` committed, pushed, PR opened against `dev`
+  - [x] Branch `feature/p03-s01-replan` committed, pushed, PR [#6](https://github.com/ggibellato/mba-ia-greenfield-project/pull/6) opened against `dev` and reviewed
 - [ ] **Step 2 — Research** (`/research phase 03`)
   - [ ] `docs/decisions/technical-decisions-phase-03-videos.md` created
   - [ ] Covers all 5 exercise-mandated decision points (queue tech, upload strategy, worker model, unique-URL/streaming, status lifecycle), each with a Recommendation — `**Decision:**` fields left `_[pending]_` is expected here, not a defect (filled later by `/plan-resolve`)
@@ -91,9 +91,9 @@ Key facts gathered during exploration (no re-derivation needed later):
 
 Registered context7, cut the first branch, brought the Docker stack up, and confirmed the baseline suite green before touching anything else. See Progress Tracker above for the specific fixes needed to get there. PR [#5](https://github.com/ggibellato/mba-ia-greenfield-project/pull/5), merged.
 
-## Step 1 — Re-plan (this document's restructuring)
+## Step 1 — Re-plan (done, reviewed)
 
-Rewrote this document's Branching & PR Strategy and Progress Tracker to move from grouped multi-skill steps to one branch/PR per skill invocation, per the rationale in "Branching & PR Strategy" above. No pipeline skill runs in this step — doc-only change.
+Rewrote this document's Branching & PR Strategy and Progress Tracker to move from grouped multi-skill steps to one branch/PR per skill invocation, per the rationale in "Branching & PR Strategy" above. No pipeline skill runs in this step — doc-only change. PR [#6](https://github.com/ggibellato/mba-ia-greenfield-project/pull/6), reviewed and approved.
 
 ## Step 2 — Research (`/research phase 03`)
 
