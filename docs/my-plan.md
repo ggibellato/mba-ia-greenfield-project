@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-03 — Steps 0–2 merged (PR #5, #6, #7); Step 3 reviewed and approved on PR #8, pending merge._
+_Last updated: 2026-07-03 — Steps 0–3 merged (PR #5, #6, #7, #8); Step 4 (Plan Validate, round 1) done, PR #9 pending review — status: dirty (7 open issues, expected)._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -41,9 +41,10 @@ _Last updated: 2026-07-03 — Steps 0–2 merged (PR #5, #6, #7); Step 3 reviewe
   - [x] `docs/phases/phase-03-videos/context.md` created via 5 parallel subagents; Filter Trace verification passed
   - [x] Correlated decision confirmed for inclusion: `openapi-docs-nestjs` (high relevance); 3 low/medium candidates excluded
   - [x] No UI scope detected — no `## UI Inventory` section emitted, per `docs/exercise.md`'s backend-only framing
-  - [x] Branch `feature/p03-s03-plan-context` committed, pushed, PR [#8](https://github.com/ggibellato/mba-ia-greenfield-project/pull/8) opened against `dev`, reviewed and approved — pending merge
-- [ ] **Step 4 — Plan Validate, round 1** (`/plan-validate 03`)
-  - [ ] `docs/phases/phase-03-videos/validation.md` created with a verdict
+  - [x] Branch `feature/p03-s03-plan-context` committed, pushed, PR [#8](https://github.com/ggibellato/mba-ia-greenfield-project/pull/8) opened against `dev`, reviewed, and merged
+- [x] **Step 4 — Plan Validate, round 1** (`/plan-validate 03`)
+  - [x] `docs/phases/phase-03-videos/validation.md` created — `status: dirty`, 7 issues: OQ-1..OQ-6 (the 6 pending TDs, expected) + MD-1 (thumbnail frame/timestamp parameter not decided by any TD)
+  - [x] Branch `feature/p03-s04-plan-validate-r1` committed, pushed, PR [#9](https://github.com/ggibellato/mba-ia-greenfield-project/pull/9) opened against `dev` — pending manual review
 - [ ] **Step 5 — Plan Resolve, round 1** (`/plan-resolve 03`)
   - [ ] Pending decisions answered via `AskUserQuestion`, decisions doc + `context.md` patched, `library-refs.md` written if new libs confirmed via context7
 - [ ] **Steps 6+ — Validate/Resolve, round 2, 3, …** (only if round 1 doesn't reach clean)
@@ -114,13 +115,13 @@ The exercise mandates these decisions be covered (already scoped into the skill 
 
 **Checkpoint:** review the generated decisions doc before moving on — `**Decision:**` fields are expected to remain `_[pending]_` at the end of this step (that's `/plan-resolve`'s job, in Step 5). Confirm the recommendations themselves are sound, especially the queue choice.
 
-## Step 3 — Plan Context (done, reviewed)
+## Step 3 — Plan Context (done, merged)
 
 PR [#8](https://github.com/ggibellato/mba-ia-greenfield-project/pull/8): `docs/phases/phase-03-videos/context.md` produced — pure consolidation (Scope, Decisions Index, Capability Coverage, Decisions Detail, Inherited Decisions Detail from Phases 01–02 + the correlated `openapi-docs-nestjs` doc, Inherited Conventions, Non-UI/Deferred Capabilities, Testing Requirements). No UI Inventory section — Phase 03 is backend-only per the exercise ("Há um frontend no repositório, mas a interface de vídeo não faz parte do escopo desta fase").
 
-## Step 4 — Plan Validate, round 1 (`/plan-validate 03`)
+## Step 4 — Plan Validate, round 1 (done, PR pending review)
 
-Produces `docs/phases/phase-03-videos/validation.md`, checking Inconsistencies/Ambiguities/Missing Decisions/Dependency Gaps/Inherited Constraint Conflicts/Open Questions against `context.md`. Expect `status: dirty` on this first pass, given every TD is still pending from Step 2 — that's `MD-N` (Missing Decisions) issues doing their job, not a problem.
+PR [#9](https://github.com/ggibellato/mba-ia-greenfield-project/pull/9): `docs/phases/phase-03-videos/validation.md` produced, `status: dirty` as expected — 6 `OQ-N` (one per pending TD) plus one genuine `MD-1` gap found: no TD/prose decides which video frame/timestamp the automatic thumbnail is grabbed from (TD-03 only decides the tooling). All other categories (Inconsistencies, Ambiguities, Dependency Gaps, Inherited Constraint Conflicts, UI Coverage Gaps) clean. Step 5 (`/plan-resolve`) resolves all 7.
 
 ## Step 5 — Plan Resolve, round 1 (`/plan-resolve 03`)
 
