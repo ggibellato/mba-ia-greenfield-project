@@ -3,8 +3,8 @@ kind: phase
 name: phase-03-videos
 sources_mtime:
   docs/project-plan.md: "2026-06-30T09:31:19+01:00"
-  docs/decisions/technical-decisions-phase-03-videos.md: "2026-07-03T17:36:23+01:00"
-  docs/decisions/technical-decisions-thumbnail-frame-selection.md: "2026-07-03T17:36:54+01:00"
+  docs/decisions/technical-decisions-phase-03-videos.md: "2026-07-03T17:47:14+01:00"
+  docs/decisions/technical-decisions-thumbnail-frame-selection.md: "2026-07-03T17:47:14+01:00"
   docs/decisions/technical-decisions-openapi-docs-nestjs.md: "2026-06-30T09:31:19+01:00"
   docs/phases/phase-01-configuracao-base/context.md: "2026-06-30T09:31:19+01:00"
   docs/phases/phase-02-auth/context.md: "2026-06-30T09:31:19+01:00"
