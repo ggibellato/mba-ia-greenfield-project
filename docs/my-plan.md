@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-03 — Steps 0–6 merged (PR #5–#11); Step 7 (Plan Validate, round 2) done, PR #12 pending review — MD-1 resolved, status: dirty (7 OQ-N, 0 MD-N)._
+_Last updated: 2026-07-03 — Steps 0–6 merged (PR #5–#11); Step 7 reviewed and approved on PR #12, pending merge — MD-1 resolved, status: dirty (7 OQ-N, 0 MD-N)._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -54,7 +54,7 @@ _Last updated: 2026-07-03 — Steps 0–6 merged (PR #5–#11); Step 7 (Plan Val
   - [x] Branch `feature/p03-s06-plan-context-rerun` committed, pushed, PR [#11](https://github.com/ggibellato/mba-ia-greenfield-project/pull/11) opened against `dev`, reviewed, and merged
 - [x] **Step 7 — Plan Validate, round 2** (`/plan-validate 03`)
   - [x] MD-1 resolved (thumbnail-frame-selection/TD-01 now covers the capability) — `status: dirty`, 7 `OQ-N` (all pending TDs incl. the new one), zero `MD-N`
-  - [x] Branch `feature/p03-s07-plan-validate-r2` committed, pushed, PR [#12](https://github.com/ggibellato/mba-ia-greenfield-project/pull/12) opened against `dev` — pending manual review
+  - [x] Branch `feature/p03-s07-plan-validate-r2` committed, pushed, PR [#12](https://github.com/ggibellato/mba-ia-greenfield-project/pull/12) opened against `dev`, reviewed and approved — pending merge
 - [ ] **Step 8 — Plan Resolve, round 1** (`/plan-resolve 03`)
   - [ ] Pending decisions answered via `AskUserQuestion` (all 7 by this point), decisions docs + `context.md` patched, `library-refs.md` written if new libs confirmed via context7
 - [ ] **Steps 9+ — Validate/Resolve, round 2, 3, …** (only if round 1 doesn't reach clean)
@@ -141,7 +141,7 @@ PR [#10](https://github.com/ggibellato/mba-ia-greenfield-project/pull/10): disco
 
 PR [#11](https://github.com/ggibellato/mba-ia-greenfield-project/pull/11): reaggregated the new ad-hoc decisions doc into `context.md` — same procedure as Step 3, rerun because a new source doc now exists. Only the thumbnail capability's coverage row and the Decisions Index changed; everything else came back byte-identical to Step 3's run.
 
-## Step 7 — Plan Validate, round 2 (done, PR pending review)
+## Step 7 — Plan Validate, round 2 (done, reviewed)
 
 PR [#12](https://github.com/ggibellato/mba-ia-greenfield-project/pull/12): confirmed `MD-1` is resolved (moved to `## Resolved Issues`, `resolved_by: thumbnail-frame-selection/TD-01`) and no new issues were introduced. `status: dirty` still — all 7 decisions (6 original + 1 new) remain pending, now all as `OQ-N` — but zero `MD-N`, so Step 8 (`/plan-resolve`) is unblocked.
 
