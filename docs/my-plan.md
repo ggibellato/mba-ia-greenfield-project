@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-03 — Steps 0–8 merged (PR #5–#13); Step 9 reviewed and approved on PR #14, pending merge — status: clean. Planning pipeline complete; next is Plan Build._
+_Last updated: 2026-07-03 — Steps 0–9 merged (PR #5–#14); starting Step 10 (Plan Build)._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -63,9 +63,9 @@ _Last updated: 2026-07-03 — Steps 0–8 merged (PR #5–#13); Step 9 reviewed 
 - [x] **Step 9 — Plan Validate, round 3** (`/plan-validate 03`)
   - [x] `status: clean` — all 8 issues (MD-1 + OQ-1..OQ-7) confirmed resolved, zero new issues across all 7 checks
   - [x] Re-stamped `context.md`'s `sources_mtime` for a false-positive staleness signal (git-checkout mtime bump, content verified byte-identical via `git diff`) — not a full `/plan-context` regeneration
-  - [x] Branch `feature/p03-s09-plan-validate-r3` committed, pushed, PR [#14](https://github.com/ggibellato/mba-ia-greenfield-project/pull/14) opened against `dev`, reviewed and approved — pending merge
+  - [x] Branch `feature/p03-s09-plan-validate-r3` committed, pushed, PR [#14](https://github.com/ggibellato/mba-ia-greenfield-project/pull/14) opened against `dev`, reviewed, and merged
   - **Planning pipeline complete: research → context → validate → resolve → validate (clean). `/plan-build` unblocked.**
-- [ ] **Step N — Plan Build** (`/plan-build 03`)
+- [ ] **Step 10 — Plan Build** (`/plan-build 03`)
   - [ ] `docs/phases/phase-03-videos/phase-03-videos.md` complete: Data Model, API Contracts, Authorization Matrix, Error Catalog, Events/Messages, SIs (SI-03.x), Dependency Map, Deliverables
 - [ ] **Step N+1 — Plan Test Specs** (`/plan-test-specs 03`)
   - [ ] Run, or explicitly skipped with reason recorded here (check the skill's own preflight — likely skip-eligible since Phase 03 is backend-only, no screen-wiring SIs)
@@ -155,11 +155,11 @@ PR [#12](https://github.com/ggibellato/mba-ia-greenfield-project/pull/12): confi
 
 PR [#13](https://github.com/ggibellato/mba-ia-greenfield-project/pull/13): all 7 pending `**Decision:**` fields filled via `AskUserQuestion` (2 batches of up to 4), every choice matching its doc's own Recommendation. Decisions doc(s) + `context.md` patched, `validation.md` issues moved to Resolved, `library-refs.md` written for the 4 newly decided libraries via context7. **This is where the actual architecture decisions got made** — not in Step 2 or Step 5.
 
-## Step 9 — Plan Validate, round 3 (done, reviewed)
+## Step 9 — Plan Validate, round 3 (done, merged)
 
 PR [#14](https://github.com/ggibellato/mba-ia-greenfield-project/pull/14): one round of the validate/resolve loop was enough — `status: clean` on the first re-check after Step 8's resolve. All 8 issues (`MD-1` + `OQ-1`..`OQ-7`) confirmed resolved, zero new issues across every check. Hit one false-positive staleness signal (git-checkout touched two decisions docs' mtimes without changing their content — verified via `git diff` against the merge commit) and re-stamped `context.md`'s `sources_mtime` rather than forcing a pointless regeneration. Planning pipeline complete: `research → context → validate → resolve → validate (clean)`, per `docs/exercise.md`'s requirement.
 
-## Step N — Plan Build (`/plan-build 03`)
+## Step 10 — Plan Build (`/plan-build 03`)
 
 Produces `docs/phases/phase-03-videos/phase-03-videos.md`. Runs in two internal phases within this one skill invocation: Phase A (scaffold + Technical Specifications: Data Model for the `videos` table linked to `channels`, API Contracts, Authorization Matrix, Error Catalog, and — because of the queue — an Events/Messages section) pauses for review; Phase B appends Step Implementations (SI-03.1, SI-03.2, …), the Dependency Map, and the Deliverables checklist.
 
