@@ -4,6 +4,7 @@ name: phase-03-videos
 sources_mtime:
   docs/project-plan.md: "2026-06-30T09:31:19+01:00"
   docs/decisions/technical-decisions-phase-03-videos.md: "2026-07-03T14:22:54+01:00"
+  docs/decisions/technical-decisions-thumbnail-frame-selection.md: "2026-07-03T17:05:29+01:00"
   docs/decisions/technical-decisions-openapi-docs-nestjs.md: "2026-06-30T09:31:19+01:00"
   docs/phases/phase-01-configuracao-base/context.md: "2026-06-30T09:31:19+01:00"
   docs/phases/phase-02-auth/context.md: "2026-06-30T09:31:19+01:00"
@@ -54,10 +55,12 @@ sources_mtime:
 | phase-03-videos/TD-04 | phase | Backend | Video Status Lifecycle & Failure Handling | pending | — | — |
 | phase-03-videos/TD-05 | phase | Backend | Unique Video URL Strategy | pending | — | — |
 | phase-03-videos/TD-06 | phase | Backend | Video Streaming & Download Serving Strategy | pending | — | — |
+| thumbnail-frame-selection/TD-01 | ad-hoc | Backend | Thumbnail Frame/Timestamp Selection Policy | pending | — | — |
 
 _Source files:_
 
 - phase-03-videos — `docs/decisions/technical-decisions-phase-03-videos.md` (scope_type: phase)
+- thumbnail-frame-selection — `docs/decisions/technical-decisions-thumbnail-frame-selection.md` (scope_type: ad-hoc)
 
 ## Capability Coverage
 
@@ -68,7 +71,7 @@ _Source files:_
 | Upload de vídeos com suporte a arquivos de até 10GB sem impacto na performance | phase-03-videos/TD-02 |
 | Pré-cadastro automático do vídeo como rascunho ao iniciar o upload | phase-03-videos/TD-04 |
 | Processamento automático do vídeo após upload (extração de duração e metadados) | phase-03-videos/TD-03, phase-03-videos/TD-04 |
-| Geração automática de thumbnail a partir de um frame do vídeo | phase-03-videos/TD-03 |
+| Geração automática de thumbnail a partir de um frame do vídeo | phase-03-videos/TD-03, thumbnail-frame-selection/TD-01 |
 | URL única por vídeo, sem conflito com outros vídeos | phase-03-videos/TD-05 |
 | Reprodução via streaming (sem necessidade de download completo) | phase-03-videos/TD-06 |
 | Download do vídeo pelo usuário | phase-03-videos/TD-06 |
