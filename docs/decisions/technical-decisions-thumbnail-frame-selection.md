@@ -1,7 +1,7 @@
 ---
 scope_type: ad-hoc
 related_phases: [3]
-status: pending
+status: decided
 date: 2026-07-03
 scope_description: "Which video frame/timestamp the automatic thumbnail generation grabs, narrowing phase-03-videos/TD-03 (worker + ffmpeg tooling already decided, but not this parameter)"
 ---
@@ -42,7 +42,8 @@ _Subprojects in scope:_
 
 **Recommendation:** **Option A (Fixed percentage, 10%)** — clears the frame-0 black-frame problem that motivated this research in the first place, scales correctly across the full range of video lengths this platform allows (unlike Option B's fixed-second offset, which has a hard failure mode for short videos), and stays deterministic and cheap to test — a single fixed parameter passed to the already-decided `fluent-ffmpeg` call, with no new dependency or processing pass. Option C's content-awareness is real but disproportionate to what this phase's capability actually requires.
 
-**Decision:** _[pending]_
+**Decision:** A (Fixed percentage, 10%)
+**Libraries:** —
 
 ---
 
@@ -50,4 +51,4 @@ _Subprojects in scope:_
 
 | ID | Scope | Decision | Recommendation | Choice |
 |----|-------|----------|---------------|--------|
-| TD-01 | Backend | Thumbnail Frame/Timestamp Selection Policy | Fixed percentage (10%) | _[pending]_ |
+| TD-01 | Backend | Thumbnail Frame/Timestamp Selection Policy | Fixed percentage (10%) | A |

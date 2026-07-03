@@ -1,7 +1,7 @@
 ---
 scope_type: phase
 related_phases: [3]
-status: pending
+status: decided
 date: 2026-07-03
 scope_description: "Object storage usage, background job queue, video worker (ffmpeg), 10GB upload strategy, unique video URLs, and streaming/download serving for Fase 03 — Upload e Processamento de Vídeos."
 ---
@@ -42,7 +42,8 @@ _Subprojects in scope:_
 
 **Recommendation:** **Option A (BullMQ via `@nestjs/bullmq`)** — the first-party NestJS module keeps this phase consistent with the project's established pattern of choosing framework-native integrations over generic alternatives (mirroring `@nestjs/jwt` and `@nestjs/throttler` in Phase 02), and its `WorkerHost`/`@Processor` pattern is exactly the mechanism TD-03 needs to run the worker as a separate container while still sharing the app's TypeORM entities and config. Redis is a real new dependency, but it is a single well-understood, single-purpose service — a smaller operational surface than a full broker (Option C), and it isolates job-queue load from the primary Postgres instance (unlike Option B).
 
-**Decision:** _[pending]_
+**Decision:** A (BullMQ via `@nestjs/bullmq`)
+**Libraries:** @nestjs/bullmq, bullmq
 
 ---
 
@@ -73,7 +74,8 @@ _Subprojects in scope:_
 
 **Recommendation:** **Option B (Presigned multipart upload)** — Option A is disqualified outright by the 5GB single-PUT ceiling, and Option C is the literal anti-pattern the exercise warns against. Multipart is also the standard, actually-tested-at-scale approach for this exact problem (S3/MinIO's own multipart API exists specifically for uploads that exceed comfortable single-request size). Object keys should follow a simple, collision-free scheme keyed by the video's own UUID (e.g. `videos/{videoId}/original.<ext>` and `videos/{videoId}/thumbnail.jpg` in one bucket) — this reuses the entity's own unique identifier (see TD-05) rather than inventing a second naming scheme.
 
-**Decision:** _[pending]_
+**Decision:** B (Presigned multipart upload)
+**Libraries:** minio
 
 ---
 
@@ -104,7 +106,8 @@ _Subprojects in scope:_
 
 **Recommendation:** **Option A (NestJS standalone worker app + `fluent-ffmpeg`)** — sharing the API's entities and repositories avoids maintaining a second, drifting data-access layer (Option B's core cost), and self-hosted `ffmpeg` fits the project's established pattern of running real infrastructure locally in Compose rather than depending on external paid services (Option C), consistent with the exercise's own instruction not to mock/skip infrastructure that can run for real.
 
-**Decision:** _[pending]_
+**Decision:** A (NestJS standalone worker app + `fluent-ffmpeg`)
+**Libraries:** fluent-ffmpeg
 
 ---
 
@@ -135,7 +138,8 @@ _Subprojects in scope:_
 
 **Recommendation:** **Option B (Linear enum + automatic retries + manual retry endpoint)** — reusing the durably-stored file on retry is a direct, low-cost improvement over forcing a full re-upload (Option A), and it layers on top of (rather than replaces) the queue's own automatic retry behavior. Option C's added structure isn't justified by this phase's transition complexity, which is a straight line with one failure exit.
 
-**Decision:** _[pending]_
+**Decision:** B (Linear enum + automatic retries + manual retry endpoint)
+**Libraries:** —
 
 ---
 
@@ -166,7 +170,8 @@ _Subprojects in scope:_
 
 **Recommendation:** **Option A (reuse the UUID primary key)** — `nestjs-entities.md` already mandates UUID PKs project-wide; reusing it as the public identifier costs nothing new and inherits the same non-conflict guarantee the database already provides, rather than introducing a second identifier concept with no functional justification. A short-code layer (Option B) is a purely additive change that can be introduced later without breaking this phase's contract, if ever desired.
 
-**Decision:** _[pending]_
+**Decision:** A (reuse the UUID primary key)
+**Libraries:** —
 
 ---
 
@@ -197,7 +202,8 @@ _Subprojects in scope:_
 
 **Recommendation:** **Option B (Redirect to a presigned GET URL)** — S3-compatible `GetObject` already implements `Range` as a core part of the API, so this option gets working range-based streaming without the API touching video bytes at all, consistent with TD-02's upload strategy and the exercise's general performance constraint. The visibility-check gap during a short-lived URL's validity window is a non-issue at this phase's scope (no visibility rules exist yet) and can be revisited if a future phase's requirements demand tighter per-chunk enforcement.
 
-**Decision:** _[pending]_
+**Decision:** B (Redirect to a presigned GET URL)
+**Libraries:** minio
 
 ---
 
@@ -205,9 +211,9 @@ _Subprojects in scope:_
 
 | ID | Scope | Decision | Recommendation | Choice |
 |----|-------|----------|---------------|--------|
-| TD-01 | Backend | Background Job Queue Technology | BullMQ via `@nestjs/bullmq` | _[pending]_ |
-| TD-02 | Backend | Video Upload Strategy for Files up to 10GB | Presigned multipart upload | _[pending]_ |
-| TD-03 | Backend | Worker Execution Model & Video Processing Tooling | NestJS standalone worker app + `fluent-ffmpeg` | _[pending]_ |
-| TD-04 | Backend | Video Status Lifecycle & Failure Handling | Linear enum + automatic retries + manual retry endpoint | _[pending]_ |
-| TD-05 | Backend | Unique Video URL Strategy | Reuse the UUID primary key | _[pending]_ |
-| TD-06 | Backend | Video Streaming & Download Serving Strategy | Redirect to a presigned GET URL | _[pending]_ |
+| TD-01 | Backend | Background Job Queue Technology | BullMQ via `@nestjs/bullmq` | A |
+| TD-02 | Backend | Video Upload Strategy for Files up to 10GB | Presigned multipart upload | B |
+| TD-03 | Backend | Worker Execution Model & Video Processing Tooling | NestJS standalone worker app + `fluent-ffmpeg` | A |
+| TD-04 | Backend | Video Status Lifecycle & Failure Handling | Linear enum + automatic retries + manual retry endpoint | B |
+| TD-05 | Backend | Unique Video URL Strategy | Reuse the UUID primary key | A |
+| TD-06 | Backend | Video Streaming & Download Serving Strategy | Redirect to a presigned GET URL | B |
