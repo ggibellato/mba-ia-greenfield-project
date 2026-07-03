@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-03 — Step 0 merged (PR #5); Step 1 reviewed and approved on PR #6, pending merge._
+_Last updated: 2026-07-03 — Steps 0–1 merged (PR #5, #6); Step 2 (Research) done, PR #7 pending review._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -33,9 +33,10 @@ _Last updated: 2026-07-03 — Step 0 merged (PR #5); Step 1 reviewed and approve
   - [x] Rewrite Branching & PR Strategy to one-step-per-skill-invocation
   - [x] Rewrite Progress Tracker and per-step narrative sections below to match
   - [x] Branch `feature/p03-s01-replan` committed, pushed, PR [#6](https://github.com/ggibellato/mba-ia-greenfield-project/pull/6) opened against `dev` and reviewed
-- [ ] **Step 2 — Research** (`/research phase 03`)
-  - [ ] `docs/decisions/technical-decisions-phase-03-videos.md` created
-  - [ ] Covers all 5 exercise-mandated decision points (queue tech, upload strategy, worker model, unique-URL/streaming, status lifecycle), each with a Recommendation — `**Decision:**` fields left `_[pending]_` is expected here, not a defect (filled later by `/plan-resolve`)
+- [x] **Step 2 — Research** (`/research phase 03`)
+  - [x] `docs/decisions/technical-decisions-phase-03-videos.md` created (6 TDs)
+  - [x] Covers all 5 exercise-mandated decision points (queue tech, upload strategy, worker model, unique-URL/streaming, status lifecycle), each with a Recommendation — `**Decision:**` fields left `_[pending]_` is expected here, not a defect (filled later by `/plan-resolve`)
+  - [x] Branch `feature/p03-s02-research` committed, pushed, PR [#7](https://github.com/ggibellato/mba-ia-greenfield-project/pull/7) opened against `dev` — pending manual review
 - [ ] **Step 3 — Plan Context** (`/plan-context 03`)
   - [ ] `docs/phases/phase-03-videos/context.md` created
 - [ ] **Step 4 — Plan Validate, round 1** (`/plan-validate 03`)
@@ -95,7 +96,9 @@ Registered context7, cut the first branch, brought the Docker stack up, and conf
 
 Rewrote this document's Branching & PR Strategy and Progress Tracker to move from grouped multi-skill steps to one branch/PR per skill invocation, per the rationale in "Branching & PR Strategy" above. No pipeline skill runs in this step — doc-only change. PR [#6](https://github.com/ggibellato/mba-ia-greenfield-project/pull/6), reviewed and approved.
 
-## Step 2 — Research (`/research phase 03`)
+## Step 2 — Research (done, PR pending review)
+
+PR [#7](https://github.com/ggibellato/mba-ia-greenfield-project/pull/7): `docs/decisions/technical-decisions-phase-03-videos.md` created with 6 TDs (queue tech, upload strategy, worker+ffmpeg tooling, status lifecycle, unique URL, streaming/download serving), all `**Decision:**` fields left `_[pending]_` as designed. Grounded via context7 against `minio-js`, `@nestjs/bull`, `pg-boss`, and `fluent-ffmpeg` docs — notably confirmed MinIO's single presigned PUT caps at 5GB, disqualifying it for the 10GB requirement outright.
 
 Run `/research phase 03` (or the equivalent free-form invocation naming Phase 03 — Upload e Processamento de Vídeos). This produces `docs/decisions/technical-decisions-phase-03-videos.md` in the same TD-numbered format as `technical-decisions-phase-02-auth.md` (Context → Options A/B/[C] with Pros/Cons → Recommendation → `**Decision:** _[pending]_` placeholder → Decisions Summary table).
 
