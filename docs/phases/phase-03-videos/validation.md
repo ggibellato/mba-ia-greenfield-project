@@ -2,37 +2,44 @@
 kind: phase
 name: phase-03-videos
 status: dirty
-issue_count: 7
+issue_count: 0
 sources_mtime:
   docs/phases/phase-03-videos/context.md: "2026-07-03T17:20:56+01:00"
-  docs/decisions/technical-decisions-phase-03-videos.md: "2026-07-03T14:22:54+01:00"
-  docs/decisions/technical-decisions-thumbnail-frame-selection.md: "2026-07-03T17:05:29+01:00"
+  docs/decisions/technical-decisions-phase-03-videos.md: "2026-07-03T17:36:23+01:00"
+  docs/decisions/technical-decisions-thumbnail-frame-selection.md: "2026-07-03T17:36:54+01:00"
 issues:
   - id: MD-1
     status: resolved
     summary: "No TD decided which video frame/timestamp is used for automatic thumbnail generation"
     resolved_by: thumbnail-frame-selection/TD-01
   - id: OQ-1
-    status: open
+    status: resolved
     summary: "TD-01 (Background Job Queue Technology) pending"
+    resolved_by: phase-03-videos/TD-01
   - id: OQ-2
-    status: open
+    status: resolved
     summary: "TD-02 (Video Upload Strategy for Files up to 10GB) pending"
+    resolved_by: phase-03-videos/TD-02
   - id: OQ-3
-    status: open
+    status: resolved
     summary: "TD-03 (Worker Execution Model & Video Processing Tooling) pending"
+    resolved_by: phase-03-videos/TD-03
   - id: OQ-4
-    status: open
+    status: resolved
     summary: "TD-04 (Video Status Lifecycle & Failure Handling) pending"
+    resolved_by: phase-03-videos/TD-04
   - id: OQ-5
-    status: open
+    status: resolved
     summary: "TD-05 (Unique Video URL Strategy) pending"
+    resolved_by: phase-03-videos/TD-05
   - id: OQ-6
-    status: open
+    status: resolved
     summary: "TD-06 (Video Streaming & Download Serving Strategy) pending"
+    resolved_by: phase-03-videos/TD-06
   - id: OQ-7
-    status: open
+    status: resolved
     summary: "thumbnail-frame-selection/TD-01 (Thumbnail Frame/Timestamp Selection Policy) pending"
+    resolved_by: thumbnail-frame-selection/TD-01
 ---
 
 # phase-03-videos — Validation
@@ -49,7 +56,7 @@ _None._
 
 ### Missing Decisions
 
-_None._ (MD-1 from the previous round is resolved — `thumbnail-frame-selection/TD-01` now covers the capability; see `## Resolved Issues`.)
+_None._
 
 ### Dependency Gaps
 
@@ -61,13 +68,7 @@ _None._
 
 ### Unresolved Open Questions
 
-- **OQ-1** — TD-01 pending — Background Job Queue Technology. Resolution: fill the **Decision:** field of TD-01 in `docs/decisions/technical-decisions-phase-03-videos.md`, then re-run `/plan-validate 03`.
-- **OQ-2** — TD-02 pending — Video Upload Strategy for Files up to 10GB. Resolution: fill the **Decision:** field of TD-02 in `docs/decisions/technical-decisions-phase-03-videos.md`, then re-run `/plan-validate 03`.
-- **OQ-3** — TD-03 pending — Worker Execution Model & Video Processing Tooling. Resolution: fill the **Decision:** field of TD-03 in `docs/decisions/technical-decisions-phase-03-videos.md`, then re-run `/plan-validate 03`.
-- **OQ-4** — TD-04 pending — Video Status Lifecycle & Failure Handling. Resolution: fill the **Decision:** field of TD-04 in `docs/decisions/technical-decisions-phase-03-videos.md`, then re-run `/plan-validate 03`.
-- **OQ-5** — TD-05 pending — Unique Video URL Strategy. Resolution: fill the **Decision:** field of TD-05 in `docs/decisions/technical-decisions-phase-03-videos.md`, then re-run `/plan-validate 03`.
-- **OQ-6** — TD-06 pending — Video Streaming & Download Serving Strategy. Resolution: fill the **Decision:** field of TD-06 in `docs/decisions/technical-decisions-phase-03-videos.md`, then re-run `/plan-validate 03`.
-- **OQ-7** — thumbnail-frame-selection/TD-01 pending — Thumbnail Frame/Timestamp Selection Policy. Resolution: fill the **Decision:** field of TD-01 in `docs/decisions/technical-decisions-thumbnail-frame-selection.md`, then re-run `/plan-validate 03`.
+_None._
 
 ### UI Coverage Gaps
 
@@ -76,3 +77,10 @@ _None._ (No UI scope for this phase — `## UI Inventory` is absent from `contex
 ## Resolved Issues
 
 - **MD-1** _(resolved_by thumbnail-frame-selection/TD-01)_ — No TD decided which video frame/timestamp is used for automatic thumbnail generation. Resolved by the Step 5 ad-hoc research adding `thumbnail-frame-selection/TD-01`, which now covers the "Geração automática de thumbnail..." capability alongside `phase-03-videos/TD-03`.
+- **OQ-1** _(resolved_by phase-03-videos/TD-01)_ — TD-01 (Background Job Queue Technology) pending. Decided: A (BullMQ via `@nestjs/bullmq`).
+- **OQ-2** _(resolved_by phase-03-videos/TD-02)_ — TD-02 (Video Upload Strategy for Files up to 10GB) pending. Decided: B (Presigned multipart upload).
+- **OQ-3** _(resolved_by phase-03-videos/TD-03)_ — TD-03 (Worker Execution Model & Video Processing Tooling) pending. Decided: A (NestJS standalone worker app + `fluent-ffmpeg`).
+- **OQ-4** _(resolved_by phase-03-videos/TD-04)_ — TD-04 (Video Status Lifecycle & Failure Handling) pending. Decided: B (Linear enum + automatic retries + manual retry endpoint).
+- **OQ-5** _(resolved_by phase-03-videos/TD-05)_ — TD-05 (Unique Video URL Strategy) pending. Decided: A (Reuse the UUID primary key).
+- **OQ-6** _(resolved_by phase-03-videos/TD-06)_ — TD-06 (Video Streaming & Download Serving Strategy) pending. Decided: B (Redirect to a presigned GET URL).
+- **OQ-7** _(resolved_by thumbnail-frame-selection/TD-01)_ — thumbnail-frame-selection/TD-01 (Thumbnail Frame/Timestamp Selection Policy) pending. Decided: A (Fixed percentage, 10%).

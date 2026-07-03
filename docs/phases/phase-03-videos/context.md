@@ -3,8 +3,8 @@ kind: phase
 name: phase-03-videos
 sources_mtime:
   docs/project-plan.md: "2026-06-30T09:31:19+01:00"
-  docs/decisions/technical-decisions-phase-03-videos.md: "2026-07-03T14:22:54+01:00"
-  docs/decisions/technical-decisions-thumbnail-frame-selection.md: "2026-07-03T17:05:29+01:00"
+  docs/decisions/technical-decisions-phase-03-videos.md: "2026-07-03T17:36:23+01:00"
+  docs/decisions/technical-decisions-thumbnail-frame-selection.md: "2026-07-03T17:36:54+01:00"
   docs/decisions/technical-decisions-openapi-docs-nestjs.md: "2026-06-30T09:31:19+01:00"
   docs/phases/phase-01-configuracao-base/context.md: "2026-06-30T09:31:19+01:00"
   docs/phases/phase-02-auth/context.md: "2026-06-30T09:31:19+01:00"
@@ -49,13 +49,13 @@ sources_mtime:
 
 | Ref | Source | Scope | Topic | Status | Decision | Libraries |
 |-----|--------|-------|-------|--------|----------|-----------|
-| phase-03-videos/TD-01 | phase | Backend | Background Job Queue Technology | pending | — | — |
-| phase-03-videos/TD-02 | phase | Backend | Video Upload Strategy for Files up to 10GB | pending | — | — |
-| phase-03-videos/TD-03 | phase | Backend | Worker Execution Model & Video Processing Tooling | pending | — | — |
-| phase-03-videos/TD-04 | phase | Backend | Video Status Lifecycle & Failure Handling | pending | — | — |
-| phase-03-videos/TD-05 | phase | Backend | Unique Video URL Strategy | pending | — | — |
-| phase-03-videos/TD-06 | phase | Backend | Video Streaming & Download Serving Strategy | pending | — | — |
-| thumbnail-frame-selection/TD-01 | ad-hoc | Backend | Thumbnail Frame/Timestamp Selection Policy | pending | — | — |
+| phase-03-videos/TD-01 | phase | Backend | Background Job Queue Technology | decided | A (BullMQ via `@nestjs/bullmq`) | @nestjs/bullmq, bullmq |
+| phase-03-videos/TD-02 | phase | Backend | Video Upload Strategy for Files up to 10GB | decided | B (Presigned multipart upload) | minio |
+| phase-03-videos/TD-03 | phase | Backend | Worker Execution Model & Video Processing Tooling | decided | A (NestJS standalone worker app + `fluent-ffmpeg`) | fluent-ffmpeg |
+| phase-03-videos/TD-04 | phase | Backend | Video Status Lifecycle & Failure Handling | decided | B (Linear enum + automatic retries + manual retry endpoint) | — |
+| phase-03-videos/TD-05 | phase | Backend | Unique Video URL Strategy | decided | A (Reuse the UUID primary key) | — |
+| phase-03-videos/TD-06 | phase | Backend | Video Streaming & Download Serving Strategy | decided | B (Redirect to a presigned GET URL) | minio |
+| thumbnail-frame-selection/TD-01 | ad-hoc | Backend | Thumbnail Frame/Timestamp Selection Policy | decided | A (Fixed percentage, 10%) | — |
 
 _Source files:_
 
@@ -78,7 +78,47 @@ _Source files:_
 
 ## Decisions Detail
 
-_No decided TDs yet._
+### phase-03-videos/TD-01
+
+**Recommendation:** the first-party NestJS module keeps this phase consistent with the project's established pattern of choosing framework-native integrations over generic alternatives (mirroring `@nestjs/jwt` and `@nestjs/throttler` in Phase 02), and its `WorkerHost`/`@Processor` pattern is exactly the mechanism TD-03 needs to run the worker as a separate container while still sharing the app's TypeORM entities and config. Redis is a real new dependency, but it is a single well-understood, single-purpose service — a smaller operational surface than a full broker (Option C), and it isolates job-queue load from the primary Postgres instance (unlike Option B).
+
+**Libraries:** @nestjs/bullmq, bullmq
+
+### phase-03-videos/TD-02
+
+**Recommendation:** Option A is disqualified outright by the 5GB single-PUT ceiling, and Option C is the literal anti-pattern the exercise warns against. Multipart is also the standard, actually-tested-at-scale approach for this exact problem (S3/MinIO's own multipart API exists specifically for uploads that exceed comfortable single-request size). Object keys should follow a simple, collision-free scheme keyed by the video's own UUID (e.g. `videos/{videoId}/original.<ext>` and `videos/{videoId}/thumbnail.jpg` in one bucket) — this reuses the entity's own unique identifier (see TD-05) rather than inventing a second naming scheme.
+
+**Libraries:** minio
+
+### phase-03-videos/TD-03
+
+**Recommendation:** sharing the API's entities and repositories avoids maintaining a second, drifting data-access layer (Option B's core cost), and self-hosted `ffmpeg` fits the project's established pattern of running real infrastructure locally in Compose rather than depending on external paid services (Option C), consistent with the exercise's own instruction not to mock/skip infrastructure that can run for real.
+
+**Libraries:** fluent-ffmpeg
+
+### phase-03-videos/TD-04
+
+**Recommendation:** reusing the durably-stored file on retry is a direct, low-cost improvement over forcing a full re-upload (Option A), and it layers on top of (rather than replaces) the queue's own automatic retry behavior. Option C's added structure isn't justified by this phase's transition complexity, which is a straight line with one failure exit.
+
+**Libraries:** —
+
+### phase-03-videos/TD-05
+
+**Recommendation:** `nestjs-entities.md` already mandates UUID PKs project-wide; reusing it as the public identifier costs nothing new and inherits the same non-conflict guarantee the database already provides, rather than introducing a second identifier concept with no functional justification. A short-code layer (Option B) is a purely additive change that can be introduced later without breaking this phase's contract, if ever desired.
+
+**Libraries:** —
+
+### phase-03-videos/TD-06
+
+**Recommendation:** S3-compatible `GetObject` already implements `Range` as a core part of the API, so this option gets working range-based streaming without the API touching video bytes at all, consistent with TD-02's upload strategy and the exercise's general performance constraint. The visibility-check gap during a short-lived URL's validity window is a non-issue at this phase's scope (no visibility rules exist yet) and can be revisited if a future phase's requirements demand tighter per-chunk enforcement.
+
+**Libraries:** minio
+
+### thumbnail-frame-selection/TD-01
+
+**Recommendation:** clears the frame-0 black-frame problem that motivated this research in the first place, scales correctly across the full range of video lengths this platform allows (unlike Option B's fixed-second offset, which has a hard failure mode for short videos), and stays deterministic and cheap to test — a single fixed parameter passed to the already-decided `fluent-ffmpeg` call, with no new dependency or processing pass. Option C's content-awareness is real but disproportionate to what this phase's capability actually requires.
+
+**Libraries:** —
 
 ## Inherited Decisions Detail
 
