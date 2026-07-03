@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-03 — Steps 0–7 merged (PR #5–#12); Step 8 reviewed and approved on PR #13, pending merge — all 7 decisions made._
+_Last updated: 2026-07-03 — Steps 0–8 merged (PR #5–#13); Step 9 reviewed and approved on PR #14, pending merge — status: clean. Planning pipeline complete; next is Plan Build._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -59,9 +59,12 @@ _Last updated: 2026-07-03 — Steps 0–7 merged (PR #5–#12); Step 8 reviewed 
   - [x] All 7 decisions answered via `AskUserQuestion` (2 batches) — every choice matched its doc's own Recommendation (TD-01=A, TD-02=B, TD-03=A, TD-04=B, TD-05=A, TD-06=B, thumbnail-frame-selection/TD-01=A)
   - [x] Both decisions docs flipped to `status: decided`; `context.md` Decisions Index + Detail rewritten (Filter Trace verification passed); `validation.md` issue_count: 0 (status left `dirty` — validate decides `clean`)
   - [x] `library-refs.md` created — `@nestjs/bullmq`, `bullmq`, `minio`, `fluent-ffmpeg` docs fetched via context7
-  - [x] Branch `feature/p03-s08-plan-resolve-r1` committed, pushed, PR [#13](https://github.com/ggibellato/mba-ia-greenfield-project/pull/13) opened against `dev`, reviewed and approved — pending merge
-- [ ] **Steps 9+ — Validate/Resolve, round 2, 3, …** (only if round 1 doesn't reach clean)
-  - [ ] Repeat `/plan-validate 03` ↔ `/plan-resolve 03`, one step each, until `validation.md` reads `status: clean` — add rows here as rounds happen
+  - [x] Branch `feature/p03-s08-plan-resolve-r1` committed, pushed, PR [#13](https://github.com/ggibellato/mba-ia-greenfield-project/pull/13) opened against `dev`, reviewed, and merged
+- [x] **Step 9 — Plan Validate, round 3** (`/plan-validate 03`)
+  - [x] `status: clean` — all 8 issues (MD-1 + OQ-1..OQ-7) confirmed resolved, zero new issues across all 7 checks
+  - [x] Re-stamped `context.md`'s `sources_mtime` for a false-positive staleness signal (git-checkout mtime bump, content verified byte-identical via `git diff`) — not a full `/plan-context` regeneration
+  - [x] Branch `feature/p03-s09-plan-validate-r3` committed, pushed, PR [#14](https://github.com/ggibellato/mba-ia-greenfield-project/pull/14) opened against `dev`, reviewed and approved — pending merge
+  - **Planning pipeline complete: research → context → validate → resolve → validate (clean). `/plan-build` unblocked.**
 - [ ] **Step N — Plan Build** (`/plan-build 03`)
   - [ ] `docs/phases/phase-03-videos/phase-03-videos.md` complete: Data Model, API Contracts, Authorization Matrix, Error Catalog, Events/Messages, SIs (SI-03.x), Dependency Map, Deliverables
 - [ ] **Step N+1 — Plan Test Specs** (`/plan-test-specs 03`)
@@ -148,13 +151,13 @@ PR [#11](https://github.com/ggibellato/mba-ia-greenfield-project/pull/11): reagg
 
 PR [#12](https://github.com/ggibellato/mba-ia-greenfield-project/pull/12): confirmed `MD-1` is resolved (moved to `## Resolved Issues`, `resolved_by: thumbnail-frame-selection/TD-01`) and no new issues were introduced. `status: dirty` still — all 7 decisions (6 original + 1 new) remain pending, now all as `OQ-N` — but zero `MD-N`, so Step 8 (`/plan-resolve`) is unblocked.
 
-## Step 8 — Plan Resolve, round 1 (done, reviewed)
+## Step 8 — Plan Resolve, round 1 (done, merged)
 
 PR [#13](https://github.com/ggibellato/mba-ia-greenfield-project/pull/13): all 7 pending `**Decision:**` fields filled via `AskUserQuestion` (2 batches of up to 4), every choice matching its doc's own Recommendation. Decisions doc(s) + `context.md` patched, `validation.md` issues moved to Resolved, `library-refs.md` written for the 4 newly decided libraries via context7. **This is where the actual architecture decisions got made** — not in Step 2 or Step 5.
 
-## Steps 9+ — Validate/Resolve, round 2, 3, … (as needed)
+## Step 9 — Plan Validate, round 3 (done, reviewed)
 
-If `validation.md` isn't `status: clean` after Step 8, repeat: `/plan-validate 03` (its own step) → `/plan-resolve 03` (its own step) → re-check. Continue until clean. **This loop is mandatory before `/plan-build` will proceed** — do not skip or force it.
+PR [#14](https://github.com/ggibellato/mba-ia-greenfield-project/pull/14): one round of the validate/resolve loop was enough — `status: clean` on the first re-check after Step 8's resolve. All 8 issues (`MD-1` + `OQ-1`..`OQ-7`) confirmed resolved, zero new issues across every check. Hit one false-positive staleness signal (git-checkout touched two decisions docs' mtimes without changing their content — verified via `git diff` against the merge commit) and re-stamped `context.md`'s `sources_mtime` rather than forcing a pointless regeneration. Planning pipeline complete: `research → context → validate → resolve → validate (clean)`, per `docs/exercise.md`'s requirement.
 
 ## Step N — Plan Build (`/plan-build 03`)
 
