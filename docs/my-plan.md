@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-03 — Steps 0–5 merged (PR #5–#10); Step 6 (Plan Context, re-run) done, PR #11 pending review._
+_Last updated: 2026-07-03 — Steps 0–6 merged (PR #5–#11); starting Step 7 (Plan Validate, round 2)._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -51,7 +51,7 @@ _Last updated: 2026-07-03 — Steps 0–5 merged (PR #5–#10); Step 6 (Plan Con
   - [x] Branch `feature/p03-s05-research-thumbnail-frame` committed, pushed, PR [#10](https://github.com/ggibellato/mba-ia-greenfield-project/pull/10) opened against `dev`, reviewed, and merged
 - [x] **Step 6 — Plan Context, re-run** (`/plan-context 03`)
   - [x] Reaggregated `thumbnail-frame-selection/TD-01` into `docs/phases/phase-03-videos/context.md` (Decisions Index + Capability Coverage); everything else byte-identical to Step 3, Filter Trace verification passed again
-  - [x] Branch `feature/p03-s06-plan-context-rerun` committed, pushed, PR [#11](https://github.com/ggibellato/mba-ia-greenfield-project/pull/11) opened against `dev` — pending manual review
+  - [x] Branch `feature/p03-s06-plan-context-rerun` committed, pushed, PR [#11](https://github.com/ggibellato/mba-ia-greenfield-project/pull/11) opened against `dev`, reviewed, and merged
 - [ ] **Step 7 — Plan Validate, round 2** (`/plan-validate 03`)
   - [ ] MD-1 should clear (replaced by a fresh `OQ-N` for the new TD's own pending decision) — expect `status: dirty` still (all decisions remain pending), zero `MD-N` this time
 - [ ] **Step 8 — Plan Resolve, round 1** (`/plan-resolve 03`)
@@ -136,7 +136,7 @@ PR [#9](https://github.com/ggibellato/mba-ia-greenfield-project/pull/9): `docs/p
 
 PR [#10](https://github.com/ggibellato/mba-ia-greenfield-project/pull/10): discovered when `/plan-resolve 03` was attempted directly after Step 4: its own hard rule is "Phase mode — never create new TDs; `MD-N` aborts with a `/research` instruction" — an `MD-N` present in `validation.md` blocks resolve from touching *any* issue, not just the `MD-N` one, until a fresh `/research` pass adds the missing TD. `docs/exercise.md`'s own workflow (research → plan → implement) is what's being followed here, just triggered mid-pipeline instead of only at the start. Produced `docs/decisions/technical-decisions-thumbnail-frame-selection.md` — a single ad-hoc TD deciding which video frame/timestamp the automatic thumbnail is grabbed from (`related_phases: [3]`, since it constrains Phase 03 but isn't itself a phase-scope slice), recommending a fixed 10% offset.
 
-## Step 6 — Plan Context, re-run (done, PR pending review)
+## Step 6 — Plan Context, re-run (done, merged)
 
 PR [#11](https://github.com/ggibellato/mba-ia-greenfield-project/pull/11): reaggregated the new ad-hoc decisions doc into `context.md` — same procedure as Step 3, rerun because a new source doc now exists. Only the thumbnail capability's coverage row and the Decisions Index changed; everything else came back byte-identical to Step 3's run.
 
