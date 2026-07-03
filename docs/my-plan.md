@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-03 — Steps 0–4 merged (PR #5, #6, #7, #8, #9). `/plan-resolve 03` aborted per its own phase-mode hard rule (MD-N present — cannot resolve without research first); inserted Steps 5–7 (ad-hoc research → re-context → re-validate) before Plan Resolve, which is now Step 8. Starting Step 5._
+_Last updated: 2026-07-03 — Steps 0–4 merged (PR #5, #6, #7, #8, #9). `/plan-resolve 03` aborted per its own phase-mode hard rule (MD-N present — cannot resolve without research first); inserted Steps 5–7 (ad-hoc research → re-context → re-validate) before Plan Resolve, which is now Step 8. Step 5 (ad-hoc research) done, PR #10 pending review._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -45,9 +45,10 @@ _Last updated: 2026-07-03 — Steps 0–4 merged (PR #5, #6, #7, #8, #9). `/plan
 - [x] **Step 4 — Plan Validate, round 1** (`/plan-validate 03`)
   - [x] `docs/phases/phase-03-videos/validation.md` created — `status: dirty`, 7 issues: OQ-1..OQ-6 (the 6 pending TDs, expected) + MD-1 (thumbnail frame/timestamp parameter not decided by any TD)
   - [x] Branch `feature/p03-s04-plan-validate-r1` committed, pushed, PR [#9](https://github.com/ggibellato/mba-ia-greenfield-project/pull/9) opened against `dev`, reviewed, and merged
-- [ ] **Step 5 — Ad-hoc Research: thumbnail frame parameter** (`/research` ad-hoc, `related_phases: [3]`)
-  - [ ] Unblocks MD-1 from Step 4's validation — `/plan-resolve` cannot invent a new TD in phase mode, so this genuinely needs its own `/research` pass, small as the topic is
-  - [ ] Produces a new ad-hoc decisions doc with 1 TD (which frame/timestamp the automatic thumbnail is grabbed from)
+- [x] **Step 5 — Ad-hoc Research: thumbnail frame parameter** (`/research` ad-hoc, `related_phases: [3]`)
+  - [x] Unblocks MD-1 from Step 4's validation — `/plan-resolve` cannot invent a new TD in phase mode, so this genuinely needs its own `/research` pass, small as the topic is
+  - [x] `docs/decisions/technical-decisions-thumbnail-frame-selection.md` created — 1 TD (fixed percentage vs fixed offset vs content-aware scene detection), Recommendation: fixed 10% — `**Decision:**` left pending
+  - [x] Branch `feature/p03-s05-research-thumbnail-frame` committed, pushed, PR [#10](https://github.com/ggibellato/mba-ia-greenfield-project/pull/10) opened against `dev` — pending manual review
 - [ ] **Step 6 — Plan Context, re-run** (`/plan-context 03`)
   - [ ] Reaggregates the new ad-hoc TD into `docs/phases/phase-03-videos/context.md`
 - [ ] **Step 7 — Plan Validate, round 2** (`/plan-validate 03`)
@@ -130,9 +131,9 @@ PR [#8](https://github.com/ggibellato/mba-ia-greenfield-project/pull/8): `docs/p
 
 PR [#9](https://github.com/ggibellato/mba-ia-greenfield-project/pull/9): `docs/phases/phase-03-videos/validation.md` produced, `status: dirty` as expected — 6 `OQ-N` (one per pending TD) plus one genuine `MD-1` gap found: no TD/prose decides which video frame/timestamp the automatic thumbnail is grabbed from (TD-03 only decides the tooling). All other categories (Inconsistencies, Ambiguities, Dependency Gaps, Inherited Constraint Conflicts, UI Coverage Gaps) clean. Step 5 (`/plan-resolve`) resolves all 7.
 
-## Step 5 — Ad-hoc Research: thumbnail frame parameter (`/research`, ad-hoc)
+## Step 5 — Ad-hoc Research: thumbnail frame parameter (done, PR pending review)
 
-Discovered when `/plan-resolve 03` was attempted directly after Step 4: its own hard rule is "Phase mode — never create new TDs; `MD-N` aborts with a `/research` instruction" — an `MD-N` present in `validation.md` blocks resolve from touching *any* issue, not just the `MD-N` one, until a fresh `/research` pass adds the missing TD. `docs/exercise.md`'s own workflow (research → plan → implement) is what's being followed here, just triggered mid-pipeline instead of only at the start. Scope: a single ad-hoc TD deciding which video frame/timestamp the automatic thumbnail is grabbed from (`related_phases: [3]`, since it constrains Phase 03 but isn't itself a phase-scope slice).
+PR [#10](https://github.com/ggibellato/mba-ia-greenfield-project/pull/10): discovered when `/plan-resolve 03` was attempted directly after Step 4: its own hard rule is "Phase mode — never create new TDs; `MD-N` aborts with a `/research` instruction" — an `MD-N` present in `validation.md` blocks resolve from touching *any* issue, not just the `MD-N` one, until a fresh `/research` pass adds the missing TD. `docs/exercise.md`'s own workflow (research → plan → implement) is what's being followed here, just triggered mid-pipeline instead of only at the start. Produced `docs/decisions/technical-decisions-thumbnail-frame-selection.md` — a single ad-hoc TD deciding which video frame/timestamp the automatic thumbnail is grabbed from (`related_phases: [3]`, since it constrains Phase 03 but isn't itself a phase-scope slice), recommending a fixed 10% offset.
 
 ## Step 6 — Plan Context, re-run (`/plan-context 03`)
 
