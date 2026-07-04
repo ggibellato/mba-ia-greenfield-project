@@ -24,7 +24,192 @@ Deliver upload of videos up to 10GB via presigned multipart storage upload (neve
 
 ## Step Implementations
 
-<!-- SIs will be written in Phase B -->
+### SI-03.1 — Dependencies, Configuration, and Docker Compose Additions
+
+**Description:** Add the queue, storage, and video-processing dependencies and infrastructure this phase needs, following the project's existing config/compose conventions — no application behavior yet.
+
+**Technical actions:**
+
+1. Add `@nestjs/bullmq`, `bullmq`, `minio`, `fluent-ffmpeg` to `package.json` (per `phase-03-videos/TD-01`, `TD-02`, `TD-03`)
+2. Add `redis` and `minio` services to `nestjs-project/compose.yaml` with healthchecks, following the `mailpit`/`db` pattern already established
+3. Create `src/config/queue.config.ts` and `src/config/storage.config.ts` via `registerAs`, mirroring `src/config/database.config.ts` (per `phase-01-configuracao-base/TD-01`, `TD-03`)
+4. Add the new queue/storage env vars to `.env.example` and the Joi schema in `src/config/env.validation.ts` (per `phase-01-configuracao-base/TD-02`)
+5. Register `BullModule.forRootAsync` in `AppModule`, injecting `queueConfig` (per `phase-03-videos/TD-01`)
+
+**Tests:** _(empty — Infra)_
+
+**Dependencies:** none
+
+**Acceptance criteria:**
+
+- `docker compose up -d` brings up `redis` and `minio` services in `running`/healthy state
+- `npm run build` compiles with the new config namespaces registered
+- Starting the app with a required queue/storage env var missing fails fast with a Joi validation error
+
+---
+
+### SI-03.2 — Video Entity and Migration
+
+**Description:** Create the `Video` entity per the Data Model, its relation to `Channel`, and the migration that creates the `videos` table.
+
+**Technical actions:**
+
+1. Create `src/videos/entities/video.entity.ts` with the fields, types, and constraints from `### Data Model` (`id`, `channel_id`, `original_filename`, `storage_key`, `thumbnail_key`, `status`, `duration_seconds`, `upload_id`, `retry_count`, `created_at`, `updated_at`)
+2. Add `@ManyToOne(() => Channel)` on `Video` and `@OneToMany(() => Video)` on `Channel`, mirroring the `Channel`↔`User` `@OneToOne` pattern in `src/channels/entities/channel.entity.ts`
+3. Create `src/videos/videos.module.ts` registering `TypeOrmModule.forFeature([Video])`
+4. Generate the migration via `npm run migration:generate` (TypeORM CLI, never hand-written) creating the `videos` table with the `channel_id` index
+
+**Tests:**
+
+| Artifact | Layer | Test file |
+|----------|-------|-----------|
+| `Video` | Integration: constraints, defaults, enum values | `src/videos/entities/video.entity.integration-spec.ts` |
+
+**Dependencies:** SI-03.1
+
+**Acceptance criteria:**
+
+- Running migrations creates a `videos` table whose columns match the Data Model's fields, types, and constraints
+- Inserting a video with an invalid `status` value violates the `status` enum constraint
+- Inserting a video with a `channel_id` that does not reference an existing channel violates the FK constraint
+
+---
+
+### SI-03.3 — Upload Initiation and Part Presigning
+
+**Description:** Implement the two endpoints that start a multipart upload and hand the client a presigned URL per part, so the video file never passes through the API.
+
+**Technical actions:**
+
+1. Create `src/videos/storage.service.ts` — `StorageService` wrapping the `minio` client: `initiateMultipartUpload(key)`, `presignPartUpload(key, uploadId, partNumber)`, `completeMultipartUpload(key, uploadId, parts)` (per `phase-03-videos/TD-02`)
+2. Create `src/videos/dto/create-video.dto.ts` — `CreateVideoDto` with `@IsString() originalFilename` and `@IsString() contentType`, both required
+3. Create `src/videos/videos.controller.ts` and `src/videos/videos.service.ts` — implement `POST /videos` (`### API Contracts`): create a `draft` `Video` row, call `storageService.initiateMultipartUpload`, persist the returned `uploadId`, return `{ id, uploadId }`
+4. Implement `GET /videos/:id/parts/:partNumber` (`### API Contracts`): verify the requester's channel owns the video (`### Authorization Matrix`) and the video is `draft` (`VIDEO_NOT_IN_DRAFT` otherwise), then return `{ url }` from `storageService.presignPartUpload`
+5. Wire the owner-check as a reusable helper in `VideosService` (`findOwnedOrThrow(videoId, channelId)`) for reuse by later SIs
+
+**Tests:**
+
+| Artifact | Layer | Test file |
+|----------|-------|-----------|
+| `VideosController` | E2E only | `test/videos.e2e-spec.ts` |
+| `CreateVideoDto` | E2E: validation wiring | `test/videos.e2e-spec.ts` |
+| `StorageService` | Integration: real MinIO, not mocked | `src/videos/storage.service.integration-spec.ts` |
+
+**Dependencies:** SI-03.2
+
+**Acceptance criteria:**
+
+- `POST /videos` with a valid body returns `201` with `id` and `uploadId`, and a `draft` row is persisted with that `id`
+- `POST /videos` with a missing `originalFilename` returns `400` with a validation error
+- `GET /videos/:id/parts/:partNumber` for a video owned by a different channel returns `403` with `VIDEO_ACCESS_FORBIDDEN`
+- `GET /videos/:id/parts/:partNumber` for a video not in `draft` status returns `409` with `VIDEO_NOT_IN_DRAFT`
+
+---
+
+### SI-03.4 — Upload Completion and Processing Job Enqueue
+
+**Description:** Implement the endpoint that finalizes the multipart upload and enqueues the background processing job — the handoff point between "uploaded" and "processing".
+
+**Technical actions:**
+
+1. Create `src/videos/dto/complete-upload.dto.ts` — `CompleteUploadDto` with `parts: { partNumber: number; etag: string }[]`, validated via nested `class-validator` decorators
+2. Register the `video-processing` queue via `BullModule.registerQueueAsync` (per `phase-03-videos/TD-01`)
+3. Implement `POST /videos/:id/complete` (`### API Contracts`) in `VideosService`: owner + `draft`-status checks (`VIDEO_NOT_IN_DRAFT` otherwise), call `storageService.completeMultipartUpload`, set `storage_key`, flip `status` to `processing`
+4. Enqueue the `process-video` job (`### Events/Messages`) with `{ videoId }`, `attempts: 3`, exponential `backoff` (per `phase-03-videos/TD-04`)
+
+**Tests:**
+
+| Artifact | Layer | Test file |
+|----------|-------|-----------|
+| `VideosController` | E2E only | `test/videos.e2e-spec.ts` |
+| `VideosService` | Unit: branch logic (mock repo + queue) | `src/videos/videos.service.spec.ts` |
+
+**Dependencies:** SI-03.3
+
+**Acceptance criteria:**
+
+- `POST /videos/:id/complete` with valid `parts` returns `200` with `status: "processing"` and enqueues exactly one `process-video` job carrying that video's `id`
+- `POST /videos/:id/complete` for a video not in `draft` status returns `409` with `VIDEO_NOT_IN_DRAFT`
+- `POST /videos/:id/complete` with malformed `parts` returns `400` with a validation error
+
+---
+
+### SI-03.5 — Video Worker: Metadata Extraction and Thumbnail Generation
+
+**Description:** Implement the standalone video worker that consumes `process-video` jobs, extracts duration via ffprobe, generates the thumbnail at the decided timestamp, and updates the video's status.
+
+**Technical actions:**
+
+1. Create `src/worker.ts` — a standalone bootstrap (`NestFactory.createApplicationContext`) sharing `VideosModule`'s DI graph, registering only the queue processor (per `phase-03-videos/TD-03`)
+2. Create `src/videos/video.processor.ts` — `@Processor('video-processing')` class extending `WorkerHost`, implementing `async process(job: Job<{ videoId: string }>)`
+3. In `process()`: fetch the object from MinIO by `storage_key`, run `ffmpeg.ffprobe` to extract `duration_seconds`, run `.screenshots({ timestamps: ['10%'] })` for the thumbnail (per `thumbnail-frame-selection/TD-01`'s decided 10% policy), upload the thumbnail to `thumbnail_key`, and flip `status` to `ready`
+4. On unrecoverable failure (after BullMQ's `attempts`/`backoff` are exhausted), leave `status` as `error` (per `phase-03-videos/TD-04`)
+5. Add a worker Dockerfile (extending `Dockerfile.dev` with `ffmpeg` installed via `apt`) and a `worker` service in `compose.yaml` running `node dist/worker.js`
+
+**Tests:**
+
+| Artifact | Layer | Test file |
+|----------|-------|-----------|
+| `VideoProcessor` | Integration: real MinIO + real Redis/BullMQ, not mocked | `src/videos/video.processor.integration-spec.ts` |
+
+**Dependencies:** SI-03.4
+
+**Acceptance criteria:**
+
+- A `process-video` job for a valid uploaded video updates `duration_seconds` and `thumbnail_key`, and flips `status` to `ready`
+- A job for a corrupt/unreadable video exhausts automatic retries and leaves the video in `error` status
+- The generated thumbnail is grabbed at 10% of the video's duration, not at timestamp 0
+
+---
+
+### SI-03.6 — Video Status Endpoint and Manual Retry
+
+**Description:** Implement the endpoint clients poll for upload/processing status, and the manual retry endpoint that re-enqueues processing for a failed video without a fresh upload.
+
+**Technical actions:**
+
+1. Implement `GET /videos/:id` (`### API Contracts`) in `VideosService`: owner check, return `{ id, status, originalFilename, durationSeconds, createdAt }`
+2. Implement `POST /videos/:id/retry` (`### API Contracts`): owner + `error`-status checks (`VIDEO_NOT_IN_ERROR_STATE` otherwise), increment `retry_count`, flip `status` to `processing`, re-enqueue the `process-video` job (per `phase-03-videos/TD-04`)
+
+**Tests:**
+
+| Artifact | Layer | Test file |
+|----------|-------|-----------|
+| `VideosController` | E2E only | `test/videos.e2e-spec.ts` |
+
+**Dependencies:** SI-03.4
+
+**Acceptance criteria:**
+
+- `GET /videos/:id` for the owning channel returns `200` with the video's current status and metadata
+- `GET /videos/:id` for a non-owning channel returns `403` with `VIDEO_ACCESS_FORBIDDEN`
+- `POST /videos/:id/retry` on an `error` video returns `200` with `status: "processing"`, increments `retry_count`, and re-enqueues the job
+- `POST /videos/:id/retry` on a `ready` video returns `409` with `VIDEO_NOT_IN_ERROR_STATE`
+
+---
+
+### SI-03.7 — Streaming and Download Endpoints
+
+**Description:** Implement the two endpoints that serve a ready video's bytes by redirecting to a presigned storage URL, keeping large-file bytes off the API process entirely.
+
+**Technical actions:**
+
+1. Implement `GET /videos/:id/stream` (`### API Contracts`): owner + `ready`-status checks (`VIDEO_NOT_READY` otherwise), `302` redirect with `Location` set to `storageService.presignedGetObject(storage_key)` (per `phase-03-videos/TD-06`)
+2. Implement `GET /videos/:id/download` (`### API Contracts`): same checks, `302` redirect with `Location` set to a presigned GET URL carrying `response-content-disposition: attachment; filename="{originalFilename}"`
+
+**Tests:**
+
+| Artifact | Layer | Test file |
+|----------|-------|-----------|
+| `VideosController` | E2E only | `test/videos.e2e-spec.ts` |
+
+**Dependencies:** SI-03.5
+
+**Acceptance criteria:**
+
+- `GET /videos/:id/stream` for a `ready` video returns `302` with a `Location` header pointing to a presigned MinIO URL
+- `GET /videos/:id/download` for a `ready` video returns `302` with a `Location` header whose target carries a `content-disposition` reflecting the original filename
+- `GET /videos/:id/stream` for a video not in `ready` status returns `409` with `VIDEO_NOT_READY`
 
 ---
 
@@ -198,10 +383,32 @@ Error response shape follows the `{ statusCode, error, message }` envelope alrea
 
 ## Dependency Map
 
-<!-- Dep Map will be written in Phase B -->
+```
+SI-03.1 (root)
+└── SI-03.2 — depends on SI-03.1 (entity needs config/infra first)
+    └── SI-03.3 — depends on SI-03.2 (upload endpoints need the entity)
+        └── SI-03.4 — depends on SI-03.3 (completion needs initiation)
+            ├── SI-03.5 — depends on SI-03.4 (worker consumes the enqueued job)
+            │   └── SI-03.7 — depends on SI-03.5 (streaming/download need a worker-produced ready video)
+            └── SI-03.6 — depends on SI-03.4 (status/retry need the queue wiring in place)
+```
 
 ---
 
 ## Deliverables
 
-<!-- Deliverables will be written in Phase B -->
+- [ ] SI-03.1 — Dependencies, Configuration, and Docker Compose Additions
+- [ ] SI-03.2 — Video Entity and Migration
+- [ ] SI-03.3 — Upload Initiation and Part Presigning
+- [ ] SI-03.4 — Upload Completion and Processing Job Enqueue
+- [ ] SI-03.5 — Video Worker: Metadata Extraction and Thumbnail Generation
+- [ ] SI-03.6 — Video Status Endpoint and Manual Retry
+- [ ] SI-03.7 — Streaming and Download Endpoints
+
+**Full test suites** (per `nestjs-project/CLAUDE.md` — every command runs inside the container):
+
+- [ ] Backend unit + integration tests pass (`docker compose exec nestjs-api npm test -- --runInBand`)
+- [ ] E2E tests pass (`docker compose exec nestjs-api npm run test:e2e`)
+- [ ] Type-check passes (`docker compose exec nestjs-api npx tsc --noEmit`)
+- [ ] Lint passes (`docker compose exec nestjs-api npm run lint`)
+- [ ] `docker compose ps` shows `nestjs-api`, `db`, `mailpit`, `redis`, `minio`, and the `worker` service all healthy/running
