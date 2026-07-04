@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-04 — Steps 0–11 merged (PR #5–#16); Step 12 (Plan Test Specs) explicitly skipped, PR pending review. Next: implementation, one step per SI._
+_Last updated: 2026-07-04 — Steps 0–11 merged (PR #5–#16); Step 12 (Plan Test Specs) explicitly skipped, PR #17 pending review. Next: implementation, one step per SI._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -78,6 +78,7 @@ _Last updated: 2026-07-04 — Steps 0–11 merged (PR #5–#16); Step 12 (Plan T
 - [x] **Step 12 — Plan Test Specs** (`/plan-test-specs 03`)
   - [x] Explicitly skipped — `docs/exercise.md` marks this stage `(opcional)` and its acceptance criteria never reference a test-spec artifact; the skill would also no-op regardless (no SI uses the single-endpoint `**Route:**` shape). Reason recorded in `docs/phases/phase-03-videos/progress.md`.
   - [x] `docs/phases/phase-03-videos/progress.md` created with the skip rationale + all 7 SIs listed as pending
+  - [x] Branch `feature/p03-s12-plan-test-specs-skip` committed, pushed, PR [#17](https://github.com/ggibellato/mba-ia-greenfield-project/pull/17) opened against `dev` — pending manual review
 - [ ] **Steps 13+… — Implementation, one per SI** (`/implement`)
   - [ ] Cut `feature/p03-s13-si-03-1` (etc.), one branch/PR per SI, from updated `dev` each time
     - [ ] SI-03.1 — Dependencies, Configuration, and Docker Compose Additions
