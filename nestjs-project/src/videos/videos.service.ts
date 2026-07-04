@@ -1,7 +1,9 @@
 import { randomUUID } from 'crypto';
 import { extname } from 'path';
+import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Queue } from 'bullmq';
 import { Repository } from 'typeorm';
 import { Channel } from '../channels/entities/channel.entity';
 import { ChannelsService } from '../channels/channels.service';
@@ -10,6 +12,7 @@ import {
   VideoNotFoundException,
   VideoNotInDraftException,
 } from '../common/exceptions/domain.exception';
+import { CompleteUploadDto } from './dto/complete-upload.dto';
 import { CreateVideoDto } from './dto/create-video.dto';
 import { Video, VideoStatus } from './entities/video.entity';
 import { StorageService } from './storage.service';
@@ -21,6 +24,8 @@ export class VideosService {
     private readonly videoRepository: Repository<Video>,
     private readonly storageService: StorageService,
     private readonly channelsService: ChannelsService,
+    @InjectQueue('video-processing')
+    private readonly videoProcessingQueue: Queue,
   ) {}
 
   async createVideo(
@@ -68,6 +73,36 @@ export class VideosService {
     );
 
     return { url };
+  }
+
+  async completeUpload(
+    userId: string,
+    videoId: string,
+    dto: CompleteUploadDto,
+  ): Promise<{ id: string; status: VideoStatus }> {
+    const channel = await this.requireChannel(userId);
+    const video = await this.findOwnedOrThrow(videoId, channel.id);
+
+    if (video.status !== VideoStatus.DRAFT) {
+      throw new VideoNotInDraftException();
+    }
+
+    await this.storageService.completeMultipartUpload(
+      video.storage_key,
+      video.upload_id!,
+      dto.parts.map((p) => ({ part: p.partNumber, etag: p.etag })),
+    );
+
+    video.status = VideoStatus.PROCESSING;
+    await this.videoRepository.save(video);
+
+    await this.videoProcessingQueue.add(
+      'process-video',
+      { videoId: video.id },
+      { attempts: 3, backoff: { type: 'exponential', delay: 1000 } },
+    );
+
+    return { id: video.id, status: video.status };
   }
 
   async findOwnedOrThrow(videoId: string, channelId: string): Promise<Video> {

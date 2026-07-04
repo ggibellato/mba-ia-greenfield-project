@@ -1,5 +1,7 @@
+import { getQueueToken } from '@nestjs/bullmq';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { Queue } from 'bullmq';
 import request, { Response } from 'supertest';
 import { App } from 'supertest/types';
 import { DataSource, Repository } from 'typeorm';
@@ -15,6 +17,7 @@ interface VideoResponseBody {
   id?: string;
   uploadId?: string;
   url?: string;
+  status?: string;
   error?: string;
 }
 
@@ -30,6 +33,7 @@ describe('Videos (e2e)', () => {
   let app: INestApplication<App>;
   let dataSource: DataSource;
   let videoRepository: Repository<Video>;
+  let videoProcessingQueue: Queue;
 
   beforeAll(async () => {
     const moduleFixture = await Test.createTestingModule({
@@ -52,6 +56,7 @@ describe('Videos (e2e)', () => {
 
     dataSource = moduleFixture.get(DataSource);
     videoRepository = dataSource.getRepository(Video);
+    videoProcessingQueue = moduleFixture.get(getQueueToken('video-processing'));
   });
 
   afterAll(async () => {
@@ -60,6 +65,7 @@ describe('Videos (e2e)', () => {
 
   beforeEach(async () => {
     await cleanAllTables(dataSource);
+    await videoProcessingQueue.obliterate({ force: true });
   });
 
   let userCounter = 0;
@@ -184,6 +190,77 @@ describe('Videos (e2e)', () => {
         .expect(409);
 
       expect(body(res).error).toBe('VIDEO_NOT_IN_DRAFT');
+    });
+  });
+
+  describe('POST /videos/:id/complete', () => {
+    async function uploadPart(
+      accessToken: string,
+      id: string,
+      partNumber: number,
+    ): Promise<string> {
+      const res = await request(app.getHttpServer())
+        .get(`/videos/${id}/parts/${partNumber}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+      const putRes = await fetch(body(res).url!, {
+        method: 'PUT',
+        body: Buffer.from('fake video bytes'),
+      });
+      return putRes.headers.get('etag')!.replace(/"/g, '');
+    }
+
+    it('returns 200 with status processing and enqueues exactly one process-video job', async () => {
+      const accessToken = await registerConfirmAndLogin();
+      const { id } = await createVideo(accessToken);
+      const etag = await uploadPart(accessToken, id, 1);
+
+      const res = await request(app.getHttpServer())
+        .post(`/videos/${id}/complete`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ parts: [{ partNumber: 1, etag }] })
+        .expect(200);
+
+      expect(body(res).id).toBe(id);
+      expect(body(res).status).toBe('processing');
+
+      const video = await videoRepository.findOneBy({ id });
+      expect(video!.status).toBe(VideoStatus.PROCESSING);
+
+      const jobs = await videoProcessingQueue.getJobs([
+        'waiting',
+        'active',
+        'delayed',
+      ]);
+      expect(jobs).toHaveLength(1);
+      expect(jobs[0].name).toBe('process-video');
+      expect(jobs[0].data).toEqual({ videoId: id });
+    });
+
+    it('returns 409 with VIDEO_NOT_IN_DRAFT for a video not in draft status', async () => {
+      const accessToken = await registerConfirmAndLogin();
+      const { id } = await createVideo(accessToken);
+      await videoRepository.update(id, { status: VideoStatus.PROCESSING });
+
+      const res = await request(app.getHttpServer())
+        .post(`/videos/${id}/complete`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ parts: [{ partNumber: 1, etag: 'whatever' }] })
+        .expect(409);
+
+      expect(body(res).error).toBe('VIDEO_NOT_IN_DRAFT');
+    });
+
+    it('returns 400 with a validation error for malformed parts', async () => {
+      const accessToken = await registerConfirmAndLogin();
+      const { id } = await createVideo(accessToken);
+
+      const res = await request(app.getHttpServer())
+        .post(`/videos/${id}/complete`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ parts: [{ partNumber: 'not-a-number', etag: 123 }] })
+        .expect(400);
+
+      expect(body(res).error).toBe('VALIDATION_ERROR');
     });
   });
 });
