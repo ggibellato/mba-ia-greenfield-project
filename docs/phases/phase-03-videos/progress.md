@@ -1,7 +1,7 @@
 # phase-03-videos — Progress
 
 **Status:** in progress
-**SIs:** 3/7 completed
+**SIs:** 4/7 completed
 
 **Step 12 — Plan Test Specs:** skipped. Reasons:
 1. `docs/exercise.md` lists `/plan-test-specs` explicitly as `(opcional)` in its own pipeline description, and the exercise's Critérios de Aceite never references a test-spec artifact.
@@ -43,9 +43,14 @@ Real test coverage (unit/integration/e2e) is still mandatory per each SI's own `
   - MinIO/Postgres containers and volumes have vanished between sessions multiple times this phase (external to this work) — recreated via `docker compose up -d` + `npm run migration:run` each time; no user data at stake (dev-only DB).
 
 ### SI-03.4 — Upload Completion and Processing Job Enqueue
-- **Status:** pending
-- **Tests:** —
-- **Observations:** none
+- **Status:** completed
+- **Tests:** 4 passing (`videos.service.spec.ts`, unit) + 3 new passing (`videos.e2e-spec.ts`); full suite 159 unit/integration + 62 E2E green
+- **Observations:**
+  - `CompleteUploadDto` uses nested `class-validator` (`@ValidateNested` + `@Type(() => UploadPartDto)`) for the `parts: {partNumber, etag}[]` array — first use of this pattern in the project.
+  - `video-processing` BullMQ queue registered via `BullModule.registerQueueAsync` in `VideosModule` (producer's module), separate from `AppModule`'s connection-only `BullModule.forRootAsync` — matches BullMQ's NestJS convention of global connection + per-feature queue registration.
+  - `StorageService.completeMultipartUpload`'s `CompletedPart` shape (`{part, etag}`) differs from the DTO's `{partNumber, etag}` — mapped explicitly in `VideosService.completeUpload`, not renamed on either side (DTO field name matches the API contract; storage interface field name matches the `minio` client's own `etags` shape).
+  - E2E test for the happy path asserts against the real BullMQ queue state (`getJobs(['waiting','active','delayed'])`), not just the DB row, to directly verify the plan's AC "enqueues exactly one process-video job carrying that video's id" — added `queue.obliterate({force:true})` to `beforeEach` alongside `cleanAllTables` so jobs don't leak across tests.
+  - **Found and fixed a real bug via the E2E test, not just documentation this time:** the `POST /videos/:id/complete` controller method had no `@HttpCode(HttpStatus.OK)`, so Nest defaulted to `201 Created` for a POST — but the plan's API Contract explicitly specifies `200`. The E2E test (asserting `.expect(200)`) caught the mismatch immediately; fixed by adding the decorator.
 
 ### SI-03.5 — Video Worker: Metadata Extraction and Thumbnail Generation
 - **Status:** pending
