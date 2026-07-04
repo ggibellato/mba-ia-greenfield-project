@@ -1,7 +1,7 @@
 # phase-03-videos — Progress
 
 **Status:** in progress
-**SIs:** 0/7 completed
+**SIs:** 1/7 completed
 
 **Step 12 — Plan Test Specs:** skipped. Reasons:
 1. `docs/exercise.md` lists `/plan-test-specs` explicitly as `(opcional)` in its own pipeline description, and the exercise's Critérios de Aceite never references a test-spec artifact.
@@ -10,9 +10,14 @@
 Real test coverage (unit/integration/e2e) is still mandatory per each SI's own `**Tests:**` table and the `testing-guide-nestjs-project` skill — this skip is specific to the optional external spec-authoring layer, not to testing itself.
 
 ### SI-03.1 — Dependencies, Configuration, and Docker Compose Additions
-- **Status:** pending
-- **Tests:** —
-- **Observations:** none
+- **Status:** completed
+- **Tests:** no tests (Infra) — ACs verified manually
+- **Observations:**
+  - `docker compose up -d redis minio` reaches healthy for both within ~10s; `nestjs-api`'s `depends_on` extended to require both healthy before starting.
+  - Verified fail-fast behavior by temporarily removing `MINIO_ACCESS_KEY` from `.env` and running `node dist/main.js` directly — Joi correctly aborted with `Config validation error: "MINIO_ACCESS_KEY" is required`; `.env` restored immediately after.
+  - `fluent-ffmpeg@2.1.3` install prints an npm deprecation warning ("Package no longer supported") — expected, already known when `phase-03-videos/TD-03` decided it; not a blocker, flagging for visibility only.
+  - MinIO healthcheck uses `curl -f http://localhost:9000/minio/health/live` (the image's documented health endpoint); Redis uses `redis-cli ping`.
+  - **PR review follow-up:** default env values were duplicated across `env.validation.ts` and each `*.config.ts` file (project-wide, not just the two new ones). Centralized into `src/config/config.constants.ts` (`ENV_DEFAULTS`), imported by both layers; required vars with no legitimate default (`DB_USERNAME`/`PASSWORD`/`NAME`, `MINIO_ACCESS_KEY`/`SECRET_KEY`) switched from a dead `|| 'fallback'` to a `!` non-null assertion, matching the existing `JWT_SECRET!` precedent in `auth.config.ts`. Full suite (144 unit/integration + 52 E2E) re-run and green after the change. This surfaced a real pre-existing gap: `env.validation.integration-spec.ts`'s `requiredEnv` fixture was missing the two new required MinIO vars (introduced by this same SI) and would have failed on any full-suite run — fixed alongside the refactor.
 
 ### SI-03.2 — Video Entity and Migration
 - **Status:** pending
