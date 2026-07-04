@@ -19,6 +19,14 @@ export interface EnvVars {
   MAIL_PORT: number;
   MAIL_FROM: string;
   SWAGGER_ENABLED: 'true' | 'false';
+  REDIS_HOST: string;
+  REDIS_PORT: number;
+  MINIO_HOST: string;
+  MINIO_PORT: number;
+  MINIO_USE_SSL: 'true' | 'false';
+  MINIO_ACCESS_KEY: string;
+  MINIO_SECRET_KEY: string;
+  MINIO_BUCKET: string;
 }
 
 export const envValidationSchema = Joi.object<EnvVars>({
@@ -42,4 +50,12 @@ export const envValidationSchema = Joi.object<EnvVars>({
   MAIL_PORT: Joi.number().default(1025),
   MAIL_FROM: Joi.string().default('"StreamTube" <noreply@streamtube.com>'),
   SWAGGER_ENABLED: Joi.string().valid('true', 'false').default('false'),
+  REDIS_HOST: Joi.string().default('localhost'),
+  REDIS_PORT: Joi.number().default(6379),
+  MINIO_HOST: Joi.string().default('localhost'),
+  MINIO_PORT: Joi.number().default(9000),
+  MINIO_USE_SSL: Joi.string().valid('true', 'false').default('false'),
+  MINIO_ACCESS_KEY: Joi.string().required(),
+  MINIO_SECRET_KEY: Joi.string().required(),
+  MINIO_BUCKET: Joi.string().default('streamtube-videos'),
 });
