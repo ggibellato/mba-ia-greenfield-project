@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-04 — Steps 0–13 merged (PR #5–#18); SI-03.2 done, PR #19 pending review (2/7 SIs)._
+_Last updated: 2026-07-04 — Steps 0–13 merged (PR #5–#18); SI-03.2 reviewed and approved on PR #19, pending merge (2/7 SIs). `bugfix/readme-test-runinband` (PR #20, out-of-band doc fix) merged._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -84,11 +84,12 @@ _Last updated: 2026-07-04 — Steps 0–13 merged (PR #5–#18); SI-03.2 done, P
   - [x] All 3 ACs verified manually (no automated tests — Infra SI)
   - [x] Branch `feature/p03-s13-si-03-1` committed, pushed, PR [#18](https://github.com/ggibellato/mba-ia-greenfield-project/pull/18) opened against `dev`, reviewed, and merged
   - [x] Review follow-up: centralized duplicated env default values into `src/config/config.constants.ts` (project-wide), fixed a pre-existing test-fixture gap surfaced by the full-suite re-run
-- [ ] **Step 14 — Implementation: SI-03.2** (`/implement 03`)
+- [x] **Step 14 — Implementation: SI-03.2** (`/implement 03`)
   - [x] `Video` entity + `Channel` relation + migration, matching the Data Model exactly
   - [x] 8 tests passing (`video.entity.integration-spec.ts`); full suite 152 unit/integration + 52 E2E green
   - [x] Fixed a real pre-existing deadlock bug in `migrations.integration-spec.ts` (concurrent `Promise.all` DROP TABLE → sequential); repaired shared dev DB with explicit sign-off
-  - [ ] Branch `feature/p03-s14-si-03-2` committed, pushed, PR [#19](https://github.com/ggibellato/mba-ia-greenfield-project/pull/19) opened against `dev` — pending manual review
+  - [x] Review follow-up: centralized the duplicated `ALL_ENTITIES` array into `src/test/all-entities.ts` (12 files)
+  - [x] Branch `feature/p03-s14-si-03-2` committed, pushed, PR [#19](https://github.com/ggibellato/mba-ia-greenfield-project/pull/19) opened against `dev`, reviewed and approved — pending merge
 - [ ] **Steps 15+… — Implementation, one per remaining SI** (`/implement 03`, resumes via `progress.md`)
   - [x] SI-03.1 — Dependencies, Configuration, and Docker Compose Additions (Step 13, above)
   - [x] SI-03.2 — Video Entity and Migration (Step 14, above)
@@ -202,9 +203,9 @@ Explicitly skipped rather than run. `docs/exercise.md` lists `/plan-test-specs` 
 
 PR [#18](https://github.com/ggibellato/mba-ia-greenfield-project/pull/18): dependencies (`@nestjs/bullmq`, `bullmq`, `minio`, `fluent-ffmpeg`), `queue.config.ts`/`storage.config.ts` namespaces, `redis`/`minio` compose services with healthchecks, `BullModule.forRootAsync` registration. Infra-only SI, no automated tests per the plan — all 3 ACs verified manually (compose healthy, build compiles, Joi fail-fast on a missing required var). Review follow-up: reviewer flagged default-value duplication across `env.validation.ts` and every `*.config.ts` — fixed by centralizing into `src/config/config.constants.ts` project-wide (not just this PR's two new files), which also surfaced and fixed a pre-existing test-fixture gap. Full suite re-confirmed green (144 unit/integration + 52 E2E) before approval.
 
-## Step 14 — Implementation: SI-03.2 (done, PR pending review)
+## Step 14 — Implementation: SI-03.2 (done, reviewed)
 
-PR [#19](https://github.com/ggibellato/mba-ia-greenfield-project/pull/19): `Video` entity matching the Data Model exactly, `Channel` `@OneToMany`/`@ManyToOne` relation, migration via `npm run migration:generate`. 8 tests passing; full suite 152 unit/integration + 52 E2E green. Two notable findings: (1) the new bidirectional relation required adding `Video` to 9 pre-existing test files' entity arrays (mechanical, TypeORM metadata requirement, no business-logic change); (2) found and fixed a real pre-existing deadlock bug in `migrations.integration-spec.ts` (concurrent `Promise.all` DROP TABLE across FK-linked tables) — a subagent correctly refused to perform the resulting destructive DB cleanup and flagged it back instead of working around it; fixed the root cause and repaired the shared dev DB with explicit user sign-off.
+PR [#19](https://github.com/ggibellato/mba-ia-greenfield-project/pull/19): `Video` entity matching the Data Model exactly, `Channel` `@OneToMany`/`@ManyToOne` relation, migration via `npm run migration:generate`. 8 tests passing; full suite 152 unit/integration + 52 E2E green. Two notable findings: (1) the new bidirectional relation required adding `Video` to 9 pre-existing test files' entity arrays (mechanical, TypeORM metadata requirement, no business-logic change); (2) found and fixed a real pre-existing deadlock bug in `migrations.integration-spec.ts` (concurrent `Promise.all` DROP TABLE across FK-linked tables) — a subagent correctly refused to perform the resulting destructive DB cleanup and flagged it back instead of working around it; fixed the root cause and repaired the shared dev DB with explicit user sign-off. Review follow-up: reviewer flagged the `ALL_ENTITIES` array itself as duplicated across those same files — centralized into `src/test/all-entities.ts`, consumed by all 12 files (including switching `video.entity.integration-spec.ts` off a hand-rolled subset). Full suite re-confirmed green before approval.
 
 ## Steps 15+… — Implementation, one step per remaining SI (`/implement 03`, resumes via `progress.md`)
 
