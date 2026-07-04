@@ -1,13 +1,9 @@
 import { DataSource } from 'typeorm';
-import { User } from '../users/entities/user.entity';
-import { Channel } from '../channels/entities/channel.entity';
-import { RefreshToken } from '../auth/entities/refresh-token.entity';
-import { VerificationToken } from '../auth/entities/verification-token.entity';
-import { Video } from '../videos/entities/video.entity';
 import { CreateUsersAndChannels1775687773260 } from './migrations/1775687773260-CreateUsersAndChannels';
 import { CreateAuthTokens1777579850478 } from './migrations/1777579850478-CreateAuthTokens';
 import { CreateVideos1783166875467 } from './migrations/1783166875467-CreateVideos';
 import { createTestDataSource } from '../test/create-test-data-source';
+import { ALL_ENTITIES } from '../test/all-entities';
 
 const MANAGED_TABLES = [
   'users',
@@ -21,17 +17,14 @@ describe('Database migrations (integration)', () => {
   let dataSource: DataSource;
 
   beforeAll(async () => {
-    dataSource = createTestDataSource(
-      [User, Channel, RefreshToken, VerificationToken, Video],
-      {
-        synchronize: false,
-        migrations: [
-          CreateUsersAndChannels1775687773260,
-          CreateAuthTokens1777579850478,
-          CreateVideos1783166875467,
-        ],
-      },
-    );
+    dataSource = createTestDataSource(ALL_ENTITIES, {
+      synchronize: false,
+      migrations: [
+        CreateUsersAndChannels1775687773260,
+        CreateAuthTokens1777579850478,
+        CreateVideos1783166875467,
+      ],
+    });
 
     await dataSource.initialize();
 

@@ -5,9 +5,8 @@ import {
   cleanAllTables,
   createTestDataSource,
 } from '../../test/create-test-data-source';
+import { ALL_ENTITIES } from '../../test/all-entities';
 import { Video, VideoStatus } from './video.entity';
-
-const ALL_ENTITIES = [User, Channel, Video];
 
 describe('Video entity (integration)', () => {
   let dataSource: DataSource;

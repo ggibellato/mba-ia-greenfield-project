@@ -1,16 +1,12 @@
 import { DataSource, Repository } from 'typeorm';
-import { RefreshToken } from '../auth/entities/refresh-token.entity';
-import { VerificationToken } from '../auth/entities/verification-token.entity';
 import {
   cleanAllTables,
   createTestDataSource,
 } from '../test/create-test-data-source';
+import { ALL_ENTITIES } from '../test/all-entities';
 import { User } from '../users/entities/user.entity';
-import { Video } from '../videos/entities/video.entity';
 import { ChannelsService } from './channels.service';
 import { Channel } from './entities/channel.entity';
-
-const ALL_ENTITIES = [User, Channel, RefreshToken, VerificationToken, Video];
 
 describe('ChannelsService (integration)', () => {
   let dataSource: DataSource;
