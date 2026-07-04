@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-04 — Steps 0–10 merged (PR #5–#15); Step 11 (Plan Build, Phase B) done, PR #16 pending review. Plan complete: 7 SIs + Dep Map + Deliverables. Next: /implement, one step per SI._
+_Last updated: 2026-07-04 — Steps 0–10 merged (PR #5–#15); Step 11 reviewed and approved on PR #16, pending merge. Plan complete: 7 SIs + Dep Map + Deliverables._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -73,7 +73,7 @@ _Last updated: 2026-07-04 — Steps 0–10 merged (PR #5–#15); Step 11 (Plan B
   - [x] `docs/phases/phase-03-videos/phase-03-videos.md` complete: 7 SIs (SI-03.1..SI-03.7), Dependency Map, Deliverables (SI checklist + container-wrapped full test-suite commands)
   - [x] Fixed a real bug found by B2.5's coverage check: `library-refs.md` used `##` headings instead of the `###` the skill's grep pattern requires
   - [x] No `**Test Specs:**` placeholders emitted — none of the 7 SIs use the single-endpoint `**Route:**` shape; Step 12 (`/plan-test-specs`) expected to legitimately no-op
-  - [x] Branch `feature/p03-s11-plan-build-phase-b` committed, pushed, PR [#16](https://github.com/ggibellato/mba-ia-greenfield-project/pull/16) opened against `dev` — pending manual review
+  - [x] Branch `feature/p03-s11-plan-build-phase-b` committed, pushed, PR [#16](https://github.com/ggibellato/mba-ia-greenfield-project/pull/16) opened against `dev`, reviewed and approved — pending merge
   - **Planning artifact complete: `phase-03-videos.md` has Technical Specifications + SIs + Dependency Map + Deliverables, per `docs/exercise.md`'s required format.**
 - [ ] **Step 12 — Plan Test Specs** (`/plan-test-specs 03`)
   - [ ] Run, or explicitly skipped with reason recorded here (check the skill's own preflight — likely skip-eligible since Phase 03 is backend-only, no screen-wiring SIs)
@@ -177,7 +177,7 @@ PR [#15](https://github.com/ggibellato/mba-ia-greenfield-project/pull/15): scaff
 
 **Checkpoint:** review the Technical Specifications in `phase-03-videos.md` before Phase B runs — this is the single highest-leverage review point per the exercise's own advice ("o plano é o que segura"), and it's cheaper to correct the contracts now than after SIs are written against them.
 
-## Step 11 — Plan Build, Phase B (done, PR pending review)
+## Step 11 — Plan Build, Phase B (done, reviewed)
 
 PR [#16](https://github.com/ggibellato/mba-ia-greenfield-project/pull/16): Gate 10 detected both sentinelas from Phase A and skipped straight to Phase B, appending 7 Step Implementations (SI-03.1..SI-03.7), the Dependency Map, and the Deliverables checklist. Found and fixed a real bug along the way: `library-refs.md` used `##` headings instead of the `###` the skill's own B2.5 coverage-check grep requires. No `**Test Specs:**` placeholders emitted (no SI uses the single-endpoint `**Route:**` shape) — Step 12 is expected to legitimately no-op.
 
