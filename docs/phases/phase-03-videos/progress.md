@@ -1,7 +1,7 @@
 # phase-03-videos — Progress
 
 **Status:** in progress
-**SIs:** 2/7 completed
+**SIs:** 3/7 completed
 
 **Step 12 — Plan Test Specs:** skipped. Reasons:
 1. `docs/exercise.md` lists `/plan-test-specs` explicitly as `(opcional)` in its own pipeline description, and the exercise's Critérios de Aceite never references a test-spec artifact.
@@ -32,9 +32,15 @@ Real test coverage (unit/integration/e2e) is still mandatory per each SI's own `
   - **PR review follow-up:** reviewer flagged the `ALL_ENTITIES` array itself as duplicated across many files, and noted the system will keep growing more entities. Centralized into `src/test/all-entities.ts` (single shared `ALL_ENTITIES` export), consumed by all 12 files that previously declared it locally — including switching `video.entity.integration-spec.ts` off its own hand-rolled subset (`[User, Channel, Video]`) onto the full shared list, and `migrations.integration-spec.ts`'s inline array. No equivalent duplication found outside test files (`data-source.ts` already uses a glob, not an explicit array). Full suite re-confirmed green (152 unit/integration + 52 E2E) after the change.
 
 ### SI-03.3 — Upload Initiation and Part Presigning
-- **Status:** pending
-- **Tests:** —
-- **Observations:** none
+- **Status:** completed
+- **Tests:** 3 passing (`storage.service.integration-spec.ts`, real MinIO) + 7 passing (`test/videos.e2e-spec.ts`); full suite 155 unit/integration + 59 E2E green
+- **Observations:**
+  - `StorageService` wraps the real `minio` client (`initiateNewMultipartUpload`, `presignedUrl`, `completeMultipartUpload`); `onModuleInit` ensures the bucket exists (`bucketExists`/`makeBucket`) since MinIO doesn't auto-create it.
+  - `storage_key` needs the video's `id` before the row exists (Data Model requires it `not null`), so the id is generated client-side via `randomUUID()` before the insert, matching TypeORM's support for explicit `@PrimaryGeneratedColumn('uuid')` values.
+  - Added `ChannelsService.findByUserId` (Channel is 1:1 with User) so `VideosService` can resolve "my channel" from the JWT's `sub` without owning Channel's query logic itself; `VideosModule` imports `ChannelsModule` for this.
+  - `VideosService.findOwnedOrThrow` is the reusable owner-check helper the plan calls for, consumed here by `presignPart` and intended for reuse by SI-03.4/03.6/03.7.
+  - **Found and fixed a second real pre-existing bug** while re-verifying the full suite: `test:e2e`'s npm script did NOT actually have `--runInBand` baked in, despite `nestjs-project/CLAUDE.md` explicitly claiming it was "already configured" — every prior verification this phase (Step 0, SI-03.1, SI-03.2) happened to pass anyway with only 3 E2E files, but adding this SI's 4th E2E file (`videos.e2e-spec.ts`) tipped Jest into real parallel execution, causing genuine FK-constraint failures from concurrent `cleanAllTables()` calls across suites sharing one DB. Fixed by adding `--runInBand` directly into the `test:e2e` script in `package.json` so it can't silently regress again regardless of file count. This also retroactively makes the `README.md` wording from the earlier `bugfix/readme-test-runinband` PR accurate (it was written believing the claim, which is now true).
+  - MinIO/Postgres containers and volumes have vanished between sessions multiple times this phase (external to this work) — recreated via `docker compose up -d` + `npm run migration:run` each time; no user data at stake (dev-only DB).
 
 ### SI-03.4 — Upload Completion and Processing Job Enqueue
 - **Status:** pending
