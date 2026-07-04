@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-04 — Steps 0–11 merged (PR #5–#16); Step 12 reviewed and approved on PR #17, pending merge. Next: implementation, one step per SI._
+_Last updated: 2026-07-04 — Steps 0–12 merged (PR #5–#17); SI-03.1 done, PR #18 pending review (1/7 SIs)._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -78,16 +78,19 @@ _Last updated: 2026-07-04 — Steps 0–11 merged (PR #5–#16); Step 12 reviewe
 - [x] **Step 12 — Plan Test Specs** (`/plan-test-specs 03`)
   - [x] Explicitly skipped — `docs/exercise.md` marks this stage `(opcional)` and its acceptance criteria never reference a test-spec artifact; the skill would also no-op regardless (no SI uses the single-endpoint `**Route:**` shape). Reason recorded in `docs/phases/phase-03-videos/progress.md`.
   - [x] `docs/phases/phase-03-videos/progress.md` created with the skip rationale + all 7 SIs listed as pending
-  - [x] Branch `feature/p03-s12-plan-test-specs-skip` committed, pushed, PR [#17](https://github.com/ggibellato/mba-ia-greenfield-project/pull/17) opened against `dev`, reviewed and approved — pending merge
-- [ ] **Steps 13+… — Implementation, one per SI** (`/implement`)
-  - [ ] Cut `feature/p03-s13-si-03-1` (etc.), one branch/PR per SI, from updated `dev` each time
-    - [ ] SI-03.1 — Dependencies, Configuration, and Docker Compose Additions
-    - [ ] SI-03.2 — Video Entity and Migration
-    - [ ] SI-03.3 — Upload Initiation and Part Presigning
-    - [ ] SI-03.4 — Upload Completion and Processing Job Enqueue
-    - [ ] SI-03.5 — Video Worker: Metadata Extraction and Thumbnail Generation
-    - [ ] SI-03.6 — Video Status Endpoint and Manual Retry
-    - [ ] SI-03.7 — Streaming and Download Endpoints
+  - [x] Branch `feature/p03-s12-plan-test-specs-skip` committed, pushed, PR [#17](https://github.com/ggibellato/mba-ia-greenfield-project/pull/17) opened against `dev`, reviewed, and merged
+- [ ] **Step 13 — Implementation: SI-03.1** (`/implement 03`)
+  - [x] Dependencies, config namespaces, `redis`/`minio` compose services added; `BullModule.forRootAsync` registered
+  - [x] All 3 ACs verified manually (no automated tests — Infra SI)
+  - [ ] Branch `feature/p03-s13-si-03-1` committed, pushed, PR [#18](https://github.com/ggibellato/mba-ia-greenfield-project/pull/18) opened against `dev` — pending manual review
+- [ ] **Steps 14+… — Implementation, one per remaining SI** (`/implement 03`, resumes via `progress.md`)
+  - [x] SI-03.1 — Dependencies, Configuration, and Docker Compose Additions (Step 13, above)
+  - [ ] SI-03.2 — Video Entity and Migration
+  - [ ] SI-03.3 — Upload Initiation and Part Presigning
+  - [ ] SI-03.4 — Upload Completion and Processing Job Enqueue
+  - [ ] SI-03.5 — Video Worker: Metadata Extraction and Thumbnail Generation
+  - [ ] SI-03.6 — Video Status Endpoint and Manual Retry
+  - [ ] SI-03.7 — Streaming and Download Endpoints
   - [ ] `docs/phases/phase-03-videos/progress.md` kept current after each SI
 - [ ] **Step Last — Closure**
   - [ ] `nestjs-project/CLAUDE.md` updated with Videos section
@@ -189,9 +192,13 @@ PR [#16](https://github.com/ggibellato/mba-ia-greenfield-project/pull/16): Gate 
 
 Explicitly skipped rather than run. `docs/exercise.md` lists `/plan-test-specs` as `(opcional)` in its own pipeline, and its Critérios de Aceite never reference a test-spec artifact. Independently, the skill would no-op for this phase anyway — none of `phase-03-videos.md`'s 7 SIs use the single-endpoint `**Route:**` shape that triggers spec generation. Reason recorded in `docs/phases/phase-03-videos/progress.md`, which was created for the first time this step (skip note + all 7 SIs listed pending).
 
-## Steps 13+… — Implementation, one step per SI (`/implement`)
+## Step 13 — Implementation: SI-03.1 (done, PR pending review)
 
-Run `/implement 03`, **one step (branch/PR) per SI**, per the plan's Dependency Map — do not batch multiple SIs into one branch. For each SI: cut its branch → implement → run its own test file(s) → confirm green → commit/push/PR → merge → cut the next SI's branch from updated `dev`. Check off the corresponding SI in the Progress Tracker only once its own tests pass. Expect SIs to cover at minimum:
+PR [#18](https://github.com/ggibellato/mba-ia-greenfield-project/pull/18): dependencies (`@nestjs/bullmq`, `bullmq`, `minio`, `fluent-ffmpeg`), `queue.config.ts`/`storage.config.ts` namespaces, `redis`/`minio` compose services with healthchecks, `BullModule.forRootAsync` registration. Infra-only SI, no automated tests per the plan — all 3 ACs verified manually (compose healthy, build compiles, Joi fail-fast on a missing required var).
+
+## Steps 14+… — Implementation, one step per remaining SI (`/implement 03`, resumes via `progress.md`)
+
+`/implement` resumes automatically from `docs/phases/phase-03-videos/progress.md` — no need to re-specify which SI to start from. **One step (branch/PR) per SI**, per the plan's Dependency Map — do not batch multiple SIs into one branch. For each SI: cut its branch → implement → run its own test file(s) → confirm green → commit/push/PR → merge → cut the next SI's branch from updated `dev`. Check off the corresponding SI in the Progress Tracker only once its own tests pass. Expect SIs to cover at minimum:
 - Compose additions: object storage service (MinIO), queue service (per research decision), worker service/process — each wired with `depends_on`/`healthcheck` following the `mailpit` pattern already in `compose.yaml`.
 - `videos` module in `nestjs-project/src/videos/` (entities/dto/guards as needed) — `Channel`↔`Video` as `@OneToMany`/`@ManyToOne`, mirroring the `Channel`↔`User` `@OneToOne` pattern in `src/channels/entities/channel.entity.ts`, and reusing the existing `DomainException`/`DomainExceptionFilter` pattern from `common/exceptions/` for new error codes rather than inventing a parallel mechanism.
 - Migration via TypeORM CLI (`migration:generate`, never hand-written) creating the `videos` table.
