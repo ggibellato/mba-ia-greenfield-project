@@ -23,7 +23,7 @@ sources_mtime:
 
 # Library References — Phase 03 Videos
 
-## @nestjs/bullmq
+### @nestjs/bullmq
 
 Decided in `phase-03-videos/TD-01` (Background Job Queue Technology, Option A) and used by `phase-03-videos/TD-03` (the worker consumes the same queue).
 
@@ -48,7 +48,7 @@ BullModule.registerQueueAsync({
 
 **Consumer side (worker)** — `@Processor('video-processing')` class extends `WorkerHost`, implements `async process(job: Job)`. `@OnWorkerEvent('completed')` / `('failed')` for lifecycle hooks. Concurrency and other `WorkerOptions` pass as the decorator's second argument.
 
-## bullmq
+### bullmq
 
 Underlying queue library `@nestjs/bullmq` wraps. Directly relevant for `phase-03-videos/TD-04`'s retry/backoff decision:
 
@@ -62,7 +62,7 @@ await queue.add(
 
 `job.updateProgress(n)` is available inside the worker's `process()` for future progress reporting if needed. Automatic retries (via `attempts`/`backoff`) are the first line of defense before TD-04's manual retry endpoint kicks in.
 
-## minio
+### minio
 
 Decided in `phase-03-videos/TD-02` (10GB upload strategy, Option B — presigned multipart) and `phase-03-videos/TD-06` (streaming/download, Option B — presigned GET redirect).
 
@@ -99,7 +99,7 @@ const downloadUrl = await minioClient.presignedGetObject(bucket, key, 3600, {
 });
 ```
 
-## fluent-ffmpeg
+### fluent-ffmpeg
 
 Decided in `phase-03-videos/TD-03` (worker tooling, Option A) and parameterized by `thumbnail-frame-selection/TD-01` (fixed 10% timestamp).
 
