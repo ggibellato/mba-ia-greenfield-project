@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-04 — Steps 0–15 merged (PR #5–#21); SI-03.4 done, PR #22 pending review (4/7 SIs)._
+_Last updated: 2026-07-04 — Steps 0–15 merged (PR #5–#21); SI-03.4 reviewed and approved on PR #22, pending merge (4/7 SIs)._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -99,7 +99,7 @@ _Last updated: 2026-07-04 — Steps 0–15 merged (PR #5–#21); SI-03.4 done, P
   - [x] `CompleteUploadDto` (nested validation), `video-processing` BullMQ queue registration, `POST /videos/:id/complete`
   - [x] 4 unit tests passing (`videos.service.spec.ts`) + 3 new E2E tests passing; full suite 159 unit/integration + 62 E2E green
   - [x] E2E test caught a real bug: missing `@HttpCode(HttpStatus.OK)` made the endpoint return 201 instead of the plan's specified 200 — fixed
-  - [ ] Branch `feature/p03-s16-si-03-4` committed, pushed, PR [#22](https://github.com/ggibellato/mba-ia-greenfield-project/pull/22) opened against `dev` — pending manual review
+  - [x] Branch `feature/p03-s16-si-03-4` committed, pushed, PR [#22](https://github.com/ggibellato/mba-ia-greenfield-project/pull/22) opened against `dev`, reviewed and approved — pending merge
 - [ ] **Steps 17+… — Implementation, one per remaining SI** (`/implement 03`, resumes via `progress.md`)
   - [x] SI-03.1 — Dependencies, Configuration, and Docker Compose Additions (Step 13, above)
   - [x] SI-03.2 — Video Entity and Migration (Step 14, above)
@@ -221,7 +221,7 @@ PR [#19](https://github.com/ggibellato/mba-ia-greenfield-project/pull/19): `Vide
 
 PR [#21](https://github.com/ggibellato/mba-ia-greenfield-project/pull/21): `StorageService` wrapping the real `minio` client, `POST /videos` (draft + initiate multipart upload), `GET /videos/:id/parts/:partNumber` (owner + draft-status checks, presigned PUT url), `VideosService.findOwnedOrThrow` reusable helper, `ChannelsService.findByUserId` added for channel resolution. 3 integration tests (real MinIO round trip) + 7 E2E tests; full suite 155 unit/integration + 59 E2E green; all 4 plan ACs verified. Found and fixed a second real pre-existing bug: `test:e2e`'s npm script never actually had `--runInBand` baked in despite `CLAUDE.md` claiming otherwise — every prior verification passed by luck with only 3 E2E files; this SI's 4th E2E file tipped Jest into real parallel execution, causing genuine FK-constraint failures. Fixed at the script level.
 
-## Step 16 — Implementation: SI-03.4 (done, PR pending review)
+## Step 16 — Implementation: SI-03.4 (done, reviewed)
 
 PR [#22](https://github.com/ggibellato/mba-ia-greenfield-project/pull/22): `CompleteUploadDto` (first use of nested `class-validator` in the project), `video-processing` BullMQ queue registered in `VideosModule`, `POST /videos/:id/complete` (owner + draft-status checks, completes the multipart upload, flips status to `processing`, enqueues `process-video`). 4 unit tests (mocked repo/storage/channels/queue) + 3 new E2E tests, one of which asserts against the real BullMQ queue state via `getJobs()`; full suite 159 unit/integration + 62 E2E green; all 3 plan ACs verified. The E2E test caught a real bug on the first run: the endpoint was missing `@HttpCode(HttpStatus.OK)` and defaulted to `201` instead of the plan-specified `200` — fixed immediately.
 
