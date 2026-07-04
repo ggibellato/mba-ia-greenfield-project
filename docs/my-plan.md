@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-03 — Steps 0–9 merged (PR #5–#14); starting Step 10 (Plan Build)._
+_Last updated: 2026-07-04 — Steps 0–9 merged (PR #5–#14); Step 10 (Plan Build, Phase A) done, PR #15 pending review. Paused at the A5 checkpoint — Phase B (SIs + Dep Map + Deliverables) is a separate step (11)._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -65,12 +65,16 @@ _Last updated: 2026-07-03 — Steps 0–9 merged (PR #5–#14); starting Step 10
   - [x] Re-stamped `context.md`'s `sources_mtime` for a false-positive staleness signal (git-checkout mtime bump, content verified byte-identical via `git diff`) — not a full `/plan-context` regeneration
   - [x] Branch `feature/p03-s09-plan-validate-r3` committed, pushed, PR [#14](https://github.com/ggibellato/mba-ia-greenfield-project/pull/14) opened against `dev`, reviewed, and merged
   - **Planning pipeline complete: research → context → validate → resolve → validate (clean). `/plan-build` unblocked.**
-- [ ] **Step 10 — Plan Build** (`/plan-build 03`)
-  - [ ] `docs/phases/phase-03-videos/phase-03-videos.md` complete: Data Model, API Contracts, Authorization Matrix, Error Catalog, Events/Messages, SIs (SI-03.x), Dependency Map, Deliverables
-- [ ] **Step N+1 — Plan Test Specs** (`/plan-test-specs 03`)
+- [x] **Step 10 — Plan Build, Phase A** (`/plan-build 03`)
+  - [x] Scaffold + Technical Specifications written: Data Model (`Video` entity), API Contracts (7 endpoints), Authorization Matrix (owner-only, derived from TD-06), Error Catalog (5 domain codes), Events/Messages (`process-video` job). No UI sections — all TDs `Scope: Backend`.
+  - [x] Paused at A5 ("Stop here") — sentinelas in place for Phase B resume
+  - [x] Branch `feature/p03-s10-plan-build` committed, pushed, PR [#15](https://github.com/ggibellato/mba-ia-greenfield-project/pull/15) opened against `dev` — pending manual review
+- [ ] **Step 11 — Plan Build, Phase B** (`/plan-build 03`, resumes automatically via sentinelas)
+  - [ ] `docs/phases/phase-03-videos/phase-03-videos.md` complete: SIs (SI-03.1..SI-03.7 per the plan sketched in Phase A), Dependency Map, Deliverables
+- [ ] **Step 12 — Plan Test Specs** (`/plan-test-specs 03`)
   - [ ] Run, or explicitly skipped with reason recorded here (check the skill's own preflight — likely skip-eligible since Phase 03 is backend-only, no screen-wiring SIs)
-- [ ] **Steps N+2… — Implementation, one per SI** (`/implement`)
-  - [ ] SI list populated once `phase-03-videos.md` exists (placeholder — replace with actual SI-03.x titles from the plan, one checklist row per SI, each its own branch/PR)
+- [ ] **Steps 13+… — Implementation, one per SI** (`/implement`)
+  - [ ] SI list populated once Phase B writes them — replace with actual SI-03.x titles, one checklist row per SI, each its own branch/PR
     - [ ] SI-03.1 — _TBD_
     - [ ] SI-03.2 — _TBD_
     - [ ] SI-03.n — _TBD_
@@ -159,17 +163,23 @@ PR [#13](https://github.com/ggibellato/mba-ia-greenfield-project/pull/13): all 7
 
 PR [#14](https://github.com/ggibellato/mba-ia-greenfield-project/pull/14): one round of the validate/resolve loop was enough — `status: clean` on the first re-check after Step 8's resolve. All 8 issues (`MD-1` + `OQ-1`..`OQ-7`) confirmed resolved, zero new issues across every check. Hit one false-positive staleness signal (git-checkout touched two decisions docs' mtimes without changing their content — verified via `git diff` against the merge commit) and re-stamped `context.md`'s `sources_mtime` rather than forcing a pointless regeneration. Planning pipeline complete: `research → context → validate → resolve → validate (clean)`, per `docs/exercise.md`'s requirement.
 
-## Step 10 — Plan Build (`/plan-build 03`)
+## Step 10 — Plan Build, Phase A (done, PR pending review)
 
-Produces `docs/phases/phase-03-videos/phase-03-videos.md`. Runs in two internal phases within this one skill invocation: Phase A (scaffold + Technical Specifications: Data Model for the `videos` table linked to `channels`, API Contracts, Authorization Matrix, Error Catalog, and — because of the queue — an Events/Messages section) pauses for review; Phase B appends Step Implementations (SI-03.1, SI-03.2, …), the Dependency Map, and the Deliverables checklist.
+PR [#15](https://github.com/ggibellato/mba-ia-greenfield-project/pull/15): scaffold + Technical Specifications written — Data Model for the `videos` table linked to `channels`, API Contracts (7 endpoints), Authorization Matrix (owner-only, per TD-06), Error Catalog (5 domain codes), and — because of the queue — an Events/Messages section for the `process-video` job. Paused at the A5 checkpoint ("Stop here") for review before Phase B commits to writing the actual SI blocks against this Tech Specs surface.
 
-**Checkpoint:** review `phase-03-videos.md` in full before implementation starts — this is the single highest-leverage review point per the exercise's own advice ("o plano é o que segura"). Once this step completes, replace the placeholder SI list in the Progress Tracker above with the actual SI-03.x titles from the generated plan, one row per SI.
+**Checkpoint:** review the Technical Specifications in `phase-03-videos.md` before Phase B runs — this is the single highest-leverage review point per the exercise's own advice ("o plano é o que segura"), and it's cheaper to correct the contracts now than after SIs are written against them.
 
-## Step N+1 — Plan Test Specs (`/plan-test-specs 03`)
+## Step 11 — Plan Build, Phase B (`/plan-build 03`, resumes via sentinelas)
+
+Reruns `/plan-build 03` — Gate 10 detects both sentinelas from Phase A and skips straight to Phase B, appending Step Implementations (SI-03.1 .. SI-03.7, per the plan sketched in Phase A's endpoint cross-refs), the Dependency Map, and the Deliverables checklist.
+
+**Checkpoint:** review `phase-03-videos.md` in full once Phase B completes — the last review point before implementation starts. Once this step completes, replace the placeholder SI list in the Progress Tracker above with the actual SI-03.x titles from the generated plan, one row per SI.
+
+## Step 12 — Plan Test Specs (`/plan-test-specs 03`)
 
 Run only if the generated plan is `test_specs_aware: true` with controller-wiring SIs carrying `**Test Specs:**` placeholders — check the skill's own preflight rather than assume; likely skip-eligible here since there's no screen-wiring in scope (backend-only phase). If skipped, record the reason in `progress.md` and the tracker; this still counts as the step being resolved, no code/artifact change needed.
 
-## Steps N+2… — Implementation, one step per SI (`/implement`)
+## Steps 13+… — Implementation, one step per SI (`/implement`)
 
 Run `/implement 03`, **one step (branch/PR) per SI**, per the plan's Dependency Map — do not batch multiple SIs into one branch. For each SI: cut its branch → implement → run its own test file(s) → confirm green → commit/push/PR → merge → cut the next SI's branch from updated `dev`. Check off the corresponding SI in the Progress Tracker only once its own tests pass. Expect SIs to cover at minimum:
 - Compose additions: object storage service (MinIO), queue service (per research decision), worker service/process — each wired with `depends_on`/`healthcheck` following the `mailpit` pattern already in `compose.yaml`.
