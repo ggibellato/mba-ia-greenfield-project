@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-04 — Steps 0–9 merged (PR #5–#14); Step 10 (Plan Build, Phase A) done, PR #15 pending review. Paused at the A5 checkpoint — Phase B (SIs + Dep Map + Deliverables) is a separate step (11)._
+_Last updated: 2026-07-04 — Steps 0–9 merged (PR #5–#14); Step 10 reviewed and approved on PR #15, pending merge. Paused at the A5 checkpoint — Phase B (SIs + Dep Map + Deliverables) is a separate step (11)._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -68,7 +68,7 @@ _Last updated: 2026-07-04 — Steps 0–9 merged (PR #5–#14); Step 10 (Plan Bu
 - [x] **Step 10 — Plan Build, Phase A** (`/plan-build 03`)
   - [x] Scaffold + Technical Specifications written: Data Model (`Video` entity), API Contracts (7 endpoints), Authorization Matrix (owner-only, derived from TD-06), Error Catalog (5 domain codes), Events/Messages (`process-video` job). No UI sections — all TDs `Scope: Backend`.
   - [x] Paused at A5 ("Stop here") — sentinelas in place for Phase B resume
-  - [x] Branch `feature/p03-s10-plan-build` committed, pushed, PR [#15](https://github.com/ggibellato/mba-ia-greenfield-project/pull/15) opened against `dev` — pending manual review
+  - [x] Branch `feature/p03-s10-plan-build` committed, pushed, PR [#15](https://github.com/ggibellato/mba-ia-greenfield-project/pull/15) opened against `dev`, reviewed and approved — pending merge
 - [ ] **Step 11 — Plan Build, Phase B** (`/plan-build 03`, resumes automatically via sentinelas)
   - [ ] `docs/phases/phase-03-videos/phase-03-videos.md` complete: SIs (SI-03.1..SI-03.7 per the plan sketched in Phase A), Dependency Map, Deliverables
 - [ ] **Step 12 — Plan Test Specs** (`/plan-test-specs 03`)
@@ -163,7 +163,7 @@ PR [#13](https://github.com/ggibellato/mba-ia-greenfield-project/pull/13): all 7
 
 PR [#14](https://github.com/ggibellato/mba-ia-greenfield-project/pull/14): one round of the validate/resolve loop was enough — `status: clean` on the first re-check after Step 8's resolve. All 8 issues (`MD-1` + `OQ-1`..`OQ-7`) confirmed resolved, zero new issues across every check. Hit one false-positive staleness signal (git-checkout touched two decisions docs' mtimes without changing their content — verified via `git diff` against the merge commit) and re-stamped `context.md`'s `sources_mtime` rather than forcing a pointless regeneration. Planning pipeline complete: `research → context → validate → resolve → validate (clean)`, per `docs/exercise.md`'s requirement.
 
-## Step 10 — Plan Build, Phase A (done, PR pending review)
+## Step 10 — Plan Build, Phase A (done, reviewed)
 
 PR [#15](https://github.com/ggibellato/mba-ia-greenfield-project/pull/15): scaffold + Technical Specifications written — Data Model for the `videos` table linked to `channels`, API Contracts (7 endpoints), Authorization Matrix (owner-only, per TD-06), Error Catalog (5 domain codes), and — because of the queue — an Events/Messages section for the `process-video` job. Paused at the A5 checkpoint ("Stop here") for review before Phase B commits to writing the actual SI blocks against this Tech Specs surface.
 
