@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-05 — Steps 0–16 merged (PR #5–#22); `bugfix/test-scripts-runinband` (PR #24) merged; SI-03.5 reviewed and approved on PR #23, pending merge (5/7 SIs)._
+_Last updated: 2026-07-05 — Steps 0–17 merged (PR #5–#23, #24); SI-03.6 done, PR #25 pending review (6/7 SIs)._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -105,14 +105,19 @@ _Last updated: 2026-07-05 — Steps 0–16 merged (PR #5–#22); `bugfix/test-sc
   - [x] 2 integration tests passing (real MinIO + real Redis/BullMQ + real ffmpeg); full suite 161 unit/integration + 62 E2E green
   - [x] Found and fixed a real bug in `minio`'s `fGetObject` (spurious ENOENT under Jest/ts-jest) — worked around via `getObject` + manual pipeline
   - [x] Deliberate deviation flagged for review: `Dockerfile.worker`'s CMD idles by default (`tail -f /dev/null`), not the plan's literal `node dist/worker.js` — matches `nestjs-api`'s own never-auto-start convention
-  - [x] Branch `feature/p03-s17-si-03-5` committed, pushed, PR [#23](https://github.com/ggibellato/mba-ia-greenfield-project/pull/23) opened against `dev`, reviewed and approved — pending merge
-- [ ] **Steps 18+… — Implementation, one per remaining SI** (`/implement 03`, resumes via `progress.md`)
+  - [x] Branch `feature/p03-s17-si-03-5` committed, pushed, PR [#23](https://github.com/ggibellato/mba-ia-greenfield-project/pull/23) opened against `dev`, reviewed, and merged
+- [ ] **Step 18 — Implementation: SI-03.6** (`/implement 03`)
+  - [x] `GET /videos/:id`, `POST /videos/:id/retry`, `VideoNotInErrorStateException`, `enqueueProcessing` helper extracted for reuse
+  - [x] 8 new E2E tests passing; full suite 161 unit/integration + 68 E2E green
+  - [x] Found and fixed a real bug via the E2E tests: `videos.e2e-spec.ts` crossed the `ThrottlerGuard`'s rate limit as tests accumulated — applied `auth.e2e-spec.ts`'s existing `ThrottlerStorage.clear()` fix
+  - [ ] Branch `feature/p03-s18-si-03-6` committed, pushed, PR [#25](https://github.com/ggibellato/mba-ia-greenfield-project/pull/25) opened against `dev` — pending manual review
+- [ ] **Steps 19+… — Implementation, one per remaining SI** (`/implement 03`, resumes via `progress.md`)
   - [x] SI-03.1 — Dependencies, Configuration, and Docker Compose Additions (Step 13, above)
   - [x] SI-03.2 — Video Entity and Migration (Step 14, above)
   - [x] SI-03.3 — Upload Initiation and Part Presigning (Step 15, above)
   - [x] SI-03.4 — Upload Completion and Processing Job Enqueue (Step 16, above)
   - [x] SI-03.5 — Video Worker: Metadata Extraction and Thumbnail Generation (Step 17, above)
-  - [ ] SI-03.6 — Video Status Endpoint and Manual Retry
+  - [x] SI-03.6 — Video Status Endpoint and Manual Retry (Step 18, above)
   - [ ] SI-03.7 — Streaming and Download Endpoints
   - [ ] `docs/phases/phase-03-videos/progress.md` kept current after each SI
 - [ ] **Step Last — Closure**
@@ -231,11 +236,15 @@ PR [#21](https://github.com/ggibellato/mba-ia-greenfield-project/pull/21): `Stor
 
 PR [#22](https://github.com/ggibellato/mba-ia-greenfield-project/pull/22): `CompleteUploadDto` (first use of nested `class-validator` in the project), `video-processing` BullMQ queue registered in `VideosModule`, `POST /videos/:id/complete` (owner + draft-status checks, completes the multipart upload, flips status to `processing`, enqueues `process-video`). 4 unit tests (mocked repo/storage/channels/queue) + 3 new E2E tests, one of which asserts against the real BullMQ queue state via `getJobs()`; full suite 159 unit/integration + 62 E2E green; all 3 plan ACs verified. The E2E test caught a real bug on the first run: the endpoint was missing `@HttpCode(HttpStatus.OK)` and defaulted to `201` instead of the plan-specified `200` — fixed immediately.
 
-## Step 17 — Implementation: SI-03.5 (done, reviewed)
+## Step 17 — Implementation: SI-03.5 (done, merged)
 
 PR [#23](https://github.com/ggibellato/mba-ia-greenfield-project/pull/23): standalone worker (`worker.ts`/`worker.module.ts`, `NestFactory.createApplicationContext` sharing `VideosModule`'s DI graph), `VideoProcessor` (`@Processor('video-processing')`/`WorkerHost`: download from MinIO, `ffprobe` duration, thumbnail at 10% per `thumbnail-frame-selection/TD-01`, flip status to `ready`; `@OnWorkerEvent('failed')` flips to `error` only once retries exhaust, per `phase-03-videos/TD-04`), `Dockerfile.worker` + `worker` compose service. 2 integration tests against real MinIO + real Redis/BullMQ + real `ffmpeg`; full suite 161 unit/integration + 62 E2E green; all 3 plan ACs verified, including an explicit color-based check proving the thumbnail is grabbed at 10% and not timestamp 0. Found and fixed a real bug in the `minio` npm package itself (`fGetObject` throws a spurious ENOENT specifically under Jest/ts-jest) — worked around via `getObject` + a manual stream pipeline. One deliberate deviation flagged for review: the worker container idles by default (`tail -f /dev/null`) rather than the plan's literal `node dist/worker.js`, matching `nestjs-api`'s own established "never auto-start" convention.
 
-## Steps 18+… — Implementation, one step per remaining SI (`/implement 03`, resumes via `progress.md`)
+## Step 18 — Implementation: SI-03.6 (done, PR pending review)
+
+PR [#25](https://github.com/ggibellato/mba-ia-greenfield-project/pull/25): `GET /videos/:id` (owner check, status + metadata), `POST /videos/:id/retry` (owner + error-status checks, increments `retry_count`, re-enqueues `process-video`), new `VideoNotInErrorStateException`, `enqueueProcessing` helper extracted for reuse between `completeUpload` and `retryVideo`. 8 new E2E tests, matching the plan's Tests table (E2E only, no separate unit test called for here); full suite 161 unit/integration + 68 E2E green; all 4 plan ACs verified. Found and fixed a real bug via the E2E tests themselves: the growing test count in `videos.e2e-spec.ts` crossed the global `ThrottlerGuard`'s rate limit within the file's shared app instance — applied the same `ThrottlerStorage.clear()` fix `auth.e2e-spec.ts` already had for this exact problem.
+
+## Steps 19+… — Implementation, one step per remaining SI (`/implement 03`, resumes via `progress.md`)
 
 `/implement` resumes automatically from `docs/phases/phase-03-videos/progress.md` — no need to re-specify which SI to start from. **One step (branch/PR) per SI**, per the plan's Dependency Map — do not batch multiple SIs into one branch. For each SI: cut its branch → implement → run its own test file(s) → confirm green → commit/push/PR → merge → cut the next SI's branch from updated `dev`. Check off the corresponding SI in the Progress Tracker only once its own tests pass. Expect SIs to cover at minimum:
 - Compose additions: object storage service (MinIO), queue service (per research decision), worker service/process — each wired with `depends_on`/`healthcheck` following the `mailpit` pattern already in `compose.yaml`.
