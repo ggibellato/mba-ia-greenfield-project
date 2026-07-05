@@ -17,6 +17,9 @@ jobs:
       - name: Create .env
         run: cp .env.example .env
 
+      - name: Fix checkout ownership for containerized user
+        run: sudo chown -R 1000:1000 .
+
       - name: Start infrastructure and API containers
         run: docker compose -f compose.yaml up -d --build nestjs-api db mailpit redis minio
 
@@ -89,6 +92,9 @@ jobs:
         env:
           API_URL: http://nestjs-api:3000
           SESSION_PASSWORD: test-session-secret-that-is-at-least-32ch
+
+      - name: Fix checkout ownership for containerized user
+        run: sudo chown -R 1000:1000 .
 
       - name: Start containerized dev server
         run: |
