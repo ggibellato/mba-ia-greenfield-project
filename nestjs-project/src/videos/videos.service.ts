@@ -11,6 +11,7 @@ import {
   VideoAccessForbiddenException,
   VideoNotFoundException,
   VideoNotInDraftException,
+  VideoNotInErrorStateException,
 } from '../common/exceptions/domain.exception';
 import { CompleteUploadDto } from './dto/complete-upload.dto';
 import { CreateVideoDto } from './dto/create-video.dto';
@@ -96,11 +97,49 @@ export class VideosService {
     video.status = VideoStatus.PROCESSING;
     await this.videoRepository.save(video);
 
-    await this.videoProcessingQueue.add(
-      'process-video',
-      { videoId: video.id },
-      { attempts: 3, backoff: { type: 'exponential', delay: 1000 } },
-    );
+    await this.enqueueProcessing(video.id);
+
+    return { id: video.id, status: video.status };
+  }
+
+  async getVideo(
+    userId: string,
+    videoId: string,
+  ): Promise<{
+    id: string;
+    status: VideoStatus;
+    originalFilename: string;
+    durationSeconds: number | null;
+    createdAt: Date;
+  }> {
+    const channel = await this.requireChannel(userId);
+    const video = await this.findOwnedOrThrow(videoId, channel.id);
+
+    return {
+      id: video.id,
+      status: video.status,
+      originalFilename: video.original_filename,
+      durationSeconds: video.duration_seconds,
+      createdAt: video.created_at,
+    };
+  }
+
+  async retryVideo(
+    userId: string,
+    videoId: string,
+  ): Promise<{ id: string; status: VideoStatus }> {
+    const channel = await this.requireChannel(userId);
+    const video = await this.findOwnedOrThrow(videoId, channel.id);
+
+    if (video.status !== VideoStatus.ERROR) {
+      throw new VideoNotInErrorStateException();
+    }
+
+    video.retry_count += 1;
+    video.status = VideoStatus.PROCESSING;
+    await this.videoRepository.save(video);
+
+    await this.enqueueProcessing(video.id);
 
     return { id: video.id, status: video.status };
   }
@@ -122,5 +161,13 @@ export class VideosService {
       throw new Error(`No channel found for user ${userId}`);
     }
     return channel;
+  }
+
+  private async enqueueProcessing(videoId: string): Promise<void> {
+    await this.videoProcessingQueue.add(
+      'process-video',
+      { videoId },
+      { attempts: 3, backoff: { type: 'exponential', delay: 1000 } },
+    );
   }
 }

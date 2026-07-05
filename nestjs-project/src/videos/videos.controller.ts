@@ -135,4 +135,85 @@ export class VideosController {
   ): Promise<{ id: string; status: VideoStatus }> {
     return this.videosService.completeUpload(user.sub, id, dto);
   }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Get video status',
+    description:
+      'Returns the current status and metadata of a video, for polling upload/processing progress.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Video status and metadata',
+    schema: {
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        status: { type: 'string', example: 'processing' },
+        originalFilename: { type: 'string' },
+        durationSeconds: { type: 'number', nullable: true },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Video is not owned by the authenticated channel',
+    schema: { $ref: getSchemaPath(ApiErrorEnvelope) },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Video not found',
+    schema: { $ref: getSchemaPath(ApiErrorEnvelope) },
+  })
+  async getStatus(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+  ): Promise<{
+    id: string;
+    status: VideoStatus;
+    originalFilename: string;
+    durationSeconds: number | null;
+    createdAt: Date;
+  }> {
+    return this.videosService.getVideo(user.sub, id);
+  }
+
+  @Post(':id/retry')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Retry a failed video',
+    description:
+      'Re-enqueues processing for a video in error status, without requiring a fresh upload.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Retry accepted, video is now processing',
+    schema: {
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        status: { type: 'string', example: 'processing' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Video is not owned by the authenticated channel',
+    schema: { $ref: getSchemaPath(ApiErrorEnvelope) },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Video not found',
+    schema: { $ref: getSchemaPath(ApiErrorEnvelope) },
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Video is not in error status',
+    schema: { $ref: getSchemaPath(ApiErrorEnvelope) },
+  })
+  async retry(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+  ): Promise<{ id: string; status: VideoStatus }> {
+    return this.videosService.retryVideo(user.sub, id);
+  }
 }
