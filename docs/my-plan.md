@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-05 — Steps 0–17 merged (PR #5–#23, #24); SI-03.6 reviewed and approved on PR #25, pending merge (6/7 SIs)._
+_Last updated: 2026-07-05 — Steps 0–18 merged (PR #5–#25); SI-03.7 done, PR #26 pending review (7/7 SIs — all Phase 03 implementation complete)._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -110,22 +110,26 @@ _Last updated: 2026-07-05 — Steps 0–17 merged (PR #5–#23, #24); SI-03.6 re
   - [x] `GET /videos/:id`, `POST /videos/:id/retry`, `VideoNotInErrorStateException`, `enqueueProcessing` helper extracted for reuse
   - [x] 8 new E2E tests passing; full suite 161 unit/integration + 68 E2E green
   - [x] Found and fixed a real bug via the E2E tests: `videos.e2e-spec.ts` crossed the `ThrottlerGuard`'s rate limit as tests accumulated — applied `auth.e2e-spec.ts`'s existing `ThrottlerStorage.clear()` fix
-  - [x] Branch `feature/p03-s18-si-03-6` committed, pushed, PR [#25](https://github.com/ggibellato/mba-ia-greenfield-project/pull/25) opened against `dev`, reviewed and approved — pending merge
-- [ ] **Steps 19+… — Implementation, one per remaining SI** (`/implement 03`, resumes via `progress.md`)
+  - [x] Branch `feature/p03-s18-si-03-6` committed, pushed, PR [#25](https://github.com/ggibellato/mba-ia-greenfield-project/pull/25) opened against `dev`, reviewed, and merged
+- [ ] **Step 19 — Implementation: SI-03.7** (`/implement 03`, final SI of Phase 03)
+  - [x] `StorageService.presignedGetObject`, `GET /videos/:id/stream`, `GET /videos/:id/download`, `VideoNotReadyException`
+  - [x] 5 new E2E tests passing; full suite 161 unit/integration + 73 E2E green — all 7 SIs of Phase 03 now implemented
+  - [ ] Branch `feature/p03-s19-si-03-7` committed, pushed, PR [#26](https://github.com/ggibellato/mba-ia-greenfield-project/pull/26) opened against `dev` — pending manual review
+- [x] **Steps 13–19 summary — Implementation, one per SI** (`/implement 03`, resumed via `progress.md`)
   - [x] SI-03.1 — Dependencies, Configuration, and Docker Compose Additions (Step 13, above)
   - [x] SI-03.2 — Video Entity and Migration (Step 14, above)
   - [x] SI-03.3 — Upload Initiation and Part Presigning (Step 15, above)
   - [x] SI-03.4 — Upload Completion and Processing Job Enqueue (Step 16, above)
   - [x] SI-03.5 — Video Worker: Metadata Extraction and Thumbnail Generation (Step 17, above)
   - [x] SI-03.6 — Video Status Endpoint and Manual Retry (Step 18, above)
-  - [ ] SI-03.7 — Streaming and Download Endpoints
-  - [ ] `docs/phases/phase-03-videos/progress.md` kept current after each SI
-- [ ] **Step Last — Closure**
+  - [x] SI-03.7 — Streaming and Download Endpoints (Step 19, above)
+  - [x] `docs/phases/phase-03-videos/progress.md` kept current after each SI — `Status: completed`, 7/7 SIs
+- [ ] **Step 20 — Closure**
   - [ ] `nestjs-project/CLAUDE.md` updated with Videos section
   - [ ] Root `CLAUDE.md` updated (queue/storage/worker no longer "TBD")
   - [ ] Full Definition of Done green (whole suite + tsc + lint)
   - [ ] Every `docs/exercise.md` acceptance-criteria checkbox walked and confirmed
-  - [ ] Committed on its own `feature/p03-sNN-closure` branch; PR to `dev` opened per the branching strategy above
+  - [ ] Committed on its own `feature/p03-s20-closure` branch; PR to `dev` opened per the branching strategy above
 
 ---
 
@@ -240,21 +244,15 @@ PR [#22](https://github.com/ggibellato/mba-ia-greenfield-project/pull/22): `Comp
 
 PR [#23](https://github.com/ggibellato/mba-ia-greenfield-project/pull/23): standalone worker (`worker.ts`/`worker.module.ts`, `NestFactory.createApplicationContext` sharing `VideosModule`'s DI graph), `VideoProcessor` (`@Processor('video-processing')`/`WorkerHost`: download from MinIO, `ffprobe` duration, thumbnail at 10% per `thumbnail-frame-selection/TD-01`, flip status to `ready`; `@OnWorkerEvent('failed')` flips to `error` only once retries exhaust, per `phase-03-videos/TD-04`), `Dockerfile.worker` + `worker` compose service. 2 integration tests against real MinIO + real Redis/BullMQ + real `ffmpeg`; full suite 161 unit/integration + 62 E2E green; all 3 plan ACs verified, including an explicit color-based check proving the thumbnail is grabbed at 10% and not timestamp 0. Found and fixed a real bug in the `minio` npm package itself (`fGetObject` throws a spurious ENOENT specifically under Jest/ts-jest) — worked around via `getObject` + a manual stream pipeline. One deliberate deviation flagged for review: the worker container idles by default (`tail -f /dev/null`) rather than the plan's literal `node dist/worker.js`, matching `nestjs-api`'s own established "never auto-start" convention.
 
-## Step 18 — Implementation: SI-03.6 (done, reviewed)
+## Step 18 — Implementation: SI-03.6 (done, merged)
 
 PR [#25](https://github.com/ggibellato/mba-ia-greenfield-project/pull/25): `GET /videos/:id` (owner check, status + metadata), `POST /videos/:id/retry` (owner + error-status checks, increments `retry_count`, re-enqueues `process-video`), new `VideoNotInErrorStateException`, `enqueueProcessing` helper extracted for reuse between `completeUpload` and `retryVideo`. 8 new E2E tests, matching the plan's Tests table (E2E only, no separate unit test called for here); full suite 161 unit/integration + 68 E2E green; all 4 plan ACs verified. Found and fixed a real bug via the E2E tests themselves: the growing test count in `videos.e2e-spec.ts` crossed the global `ThrottlerGuard`'s rate limit within the file's shared app instance — applied the same `ThrottlerStorage.clear()` fix `auth.e2e-spec.ts` already had for this exact problem.
 
-## Steps 19+… — Implementation, one step per remaining SI (`/implement 03`, resumes via `progress.md`)
+## Step 19 — Implementation: SI-03.7 (done, PR pending review — final SI of Phase 03)
 
-`/implement` resumes automatically from `docs/phases/phase-03-videos/progress.md` — no need to re-specify which SI to start from. **One step (branch/PR) per SI**, per the plan's Dependency Map — do not batch multiple SIs into one branch. For each SI: cut its branch → implement → run its own test file(s) → confirm green → commit/push/PR → merge → cut the next SI's branch from updated `dev`. Check off the corresponding SI in the Progress Tracker only once its own tests pass. Expect SIs to cover at minimum:
-- Compose additions: object storage service (MinIO), queue service (per research decision), worker service/process — each wired with `depends_on`/`healthcheck` following the `mailpit` pattern already in `compose.yaml`.
-- `videos` module in `nestjs-project/src/videos/` (entities/dto/guards as needed) — `Channel`↔`Video` as `@OneToMany`/`@ManyToOne`, mirroring the `Channel`↔`User` `@OneToOne` pattern in `src/channels/entities/channel.entity.ts`, and reusing the existing `DomainException`/`DomainExceptionFilter` pattern from `common/exceptions/` for new error codes rather than inventing a parallel mechanism.
-- Migration via TypeORM CLI (`migration:generate`, never hand-written) creating the `videos` table.
-- Upload/presign endpoints, processing job producer, worker consumer, streaming/download endpoints — per the plan's API Contracts.
-- Tests at each layer per the plan's Tests tables and `testing-guide-nestjs-project` skill: `*.spec.ts` unit, `*.integration-spec.ts` against real Postgres/storage/queue in the Compose stack (not mocked — exercise explicitly forbids mocking what Compose can run for real), `*.e2e-spec.ts` via supertest.
-- `docs/phases/phase-03-videos/progress.md` updated after each SI (status + tests passing), same shape as `phase-02-auth/progress.md`.
+PR [#26](https://github.com/ggibellato/mba-ia-greenfield-project/pull/26): `StorageService.presignedGetObject`, `GET /videos/:id/stream` (owner + ready-status checks, `302` redirect to a presigned GET URL, Range support native to MinIO/S3), `GET /videos/:id/download` (same checks, redirect carries `response-content-disposition` for the original filename), new `VideoNotReadyException`. First use of NestJS's `@Redirect()` decorator in the project. 5 new E2E tests; full suite 161 unit/integration + 73 E2E green; all 3 plan ACs verified. **All 7 SIs of Phase 03 are now implemented.** Next: Step 20 — Closure.
 
-## Step Last — Closure
+## Step 20 — Closure
 
 1. Update `nestjs-project/CLAUDE.md` — add a Videos section (module layout, endpoints, queue/worker, storage) reflecting the actually-implemented code, extending the existing Architecture section rather than restating it.
 2. Update root `CLAUDE.md` — mark the Video Worker/Object Storage/Message Queue containers in the Architecture section as implemented, with the concrete tech chosen in research (replacing "TBD").
