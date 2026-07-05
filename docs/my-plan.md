@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-05 — Steps 0–16 merged (PR #5–#22); SI-03.5 done, PR #23 pending review (5/7 SIs)._
+_Last updated: 2026-07-05 — Steps 0–16 merged (PR #5–#22); `bugfix/test-scripts-runinband` (PR #24) merged; SI-03.5 reviewed and approved on PR #23, pending merge (5/7 SIs)._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -105,7 +105,7 @@ _Last updated: 2026-07-05 — Steps 0–16 merged (PR #5–#22); SI-03.5 done, P
   - [x] 2 integration tests passing (real MinIO + real Redis/BullMQ + real ffmpeg); full suite 161 unit/integration + 62 E2E green
   - [x] Found and fixed a real bug in `minio`'s `fGetObject` (spurious ENOENT under Jest/ts-jest) — worked around via `getObject` + manual pipeline
   - [x] Deliberate deviation flagged for review: `Dockerfile.worker`'s CMD idles by default (`tail -f /dev/null`), not the plan's literal `node dist/worker.js` — matches `nestjs-api`'s own never-auto-start convention
-  - [ ] Branch `feature/p03-s17-si-03-5` committed, pushed, PR [#23](https://github.com/ggibellato/mba-ia-greenfield-project/pull/23) opened against `dev` — pending manual review
+  - [x] Branch `feature/p03-s17-si-03-5` committed, pushed, PR [#23](https://github.com/ggibellato/mba-ia-greenfield-project/pull/23) opened against `dev`, reviewed and approved — pending merge
 - [ ] **Steps 18+… — Implementation, one per remaining SI** (`/implement 03`, resumes via `progress.md`)
   - [x] SI-03.1 — Dependencies, Configuration, and Docker Compose Additions (Step 13, above)
   - [x] SI-03.2 — Video Entity and Migration (Step 14, above)
@@ -231,7 +231,7 @@ PR [#21](https://github.com/ggibellato/mba-ia-greenfield-project/pull/21): `Stor
 
 PR [#22](https://github.com/ggibellato/mba-ia-greenfield-project/pull/22): `CompleteUploadDto` (first use of nested `class-validator` in the project), `video-processing` BullMQ queue registered in `VideosModule`, `POST /videos/:id/complete` (owner + draft-status checks, completes the multipart upload, flips status to `processing`, enqueues `process-video`). 4 unit tests (mocked repo/storage/channels/queue) + 3 new E2E tests, one of which asserts against the real BullMQ queue state via `getJobs()`; full suite 159 unit/integration + 62 E2E green; all 3 plan ACs verified. The E2E test caught a real bug on the first run: the endpoint was missing `@HttpCode(HttpStatus.OK)` and defaulted to `201` instead of the plan-specified `200` — fixed immediately.
 
-## Step 17 — Implementation: SI-03.5 (done, PR pending review)
+## Step 17 — Implementation: SI-03.5 (done, reviewed)
 
 PR [#23](https://github.com/ggibellato/mba-ia-greenfield-project/pull/23): standalone worker (`worker.ts`/`worker.module.ts`, `NestFactory.createApplicationContext` sharing `VideosModule`'s DI graph), `VideoProcessor` (`@Processor('video-processing')`/`WorkerHost`: download from MinIO, `ffprobe` duration, thumbnail at 10% per `thumbnail-frame-selection/TD-01`, flip status to `ready`; `@OnWorkerEvent('failed')` flips to `error` only once retries exhaust, per `phase-03-videos/TD-04`), `Dockerfile.worker` + `worker` compose service. 2 integration tests against real MinIO + real Redis/BullMQ + real `ffmpeg`; full suite 161 unit/integration + 62 E2E green; all 3 plan ACs verified, including an explicit color-based check proving the thumbnail is grabbed at 10% and not timestamp 0. Found and fixed a real bug in the `minio` npm package itself (`fGetObject` throws a spurious ENOENT specifically under Jest/ts-jest) — worked around via `getObject` + a manual stream pipeline. One deliberate deviation flagged for review: the worker container idles by default (`tail -f /dev/null`) rather than the plan's literal `node dist/worker.js`, matching `nestjs-api`'s own established "never auto-start" convention.
 
