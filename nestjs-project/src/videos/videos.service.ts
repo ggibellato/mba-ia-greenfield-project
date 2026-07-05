@@ -12,6 +12,7 @@ import {
   VideoNotFoundException,
   VideoNotInDraftException,
   VideoNotInErrorStateException,
+  VideoNotReadyException,
 } from '../common/exceptions/domain.exception';
 import { CompleteUploadDto } from './dto/complete-upload.dto';
 import { CreateVideoDto } from './dto/create-video.dto';
@@ -142,6 +143,30 @@ export class VideosService {
     await this.enqueueProcessing(video.id);
 
     return { id: video.id, status: video.status };
+  }
+
+  async getStreamUrl(userId: string, videoId: string): Promise<string> {
+    const channel = await this.requireChannel(userId);
+    const video = await this.findOwnedOrThrow(videoId, channel.id);
+
+    if (video.status !== VideoStatus.READY) {
+      throw new VideoNotReadyException();
+    }
+
+    return this.storageService.presignedGetObject(video.storage_key);
+  }
+
+  async getDownloadUrl(userId: string, videoId: string): Promise<string> {
+    const channel = await this.requireChannel(userId);
+    const video = await this.findOwnedOrThrow(videoId, channel.id);
+
+    if (video.status !== VideoStatus.READY) {
+      throw new VideoNotReadyException();
+    }
+
+    return this.storageService.presignedGetObject(video.storage_key, 3600, {
+      'response-content-disposition': `attachment; filename="${video.original_filename}"`,
+    });
   }
 
   async findOwnedOrThrow(videoId: string, channelId: string): Promise<Video> {

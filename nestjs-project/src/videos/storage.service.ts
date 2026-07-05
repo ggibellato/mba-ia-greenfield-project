@@ -90,4 +90,17 @@ export class StorageService implements OnModuleInit {
       'Content-Type': contentType,
     });
   }
+
+  async presignedGetObject(
+    key: string,
+    expirySeconds = 3600,
+    respHeaders?: Record<string, string>,
+  ): Promise<string> {
+    return this.client.presignedGetObject(
+      this.bucket,
+      key,
+      expirySeconds,
+      respHeaders,
+    );
+  }
 }

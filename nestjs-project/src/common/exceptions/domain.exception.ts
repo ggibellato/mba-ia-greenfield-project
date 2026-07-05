@@ -76,3 +76,9 @@ export class VideoNotInErrorStateException extends DomainException {
     super('VIDEO_NOT_IN_ERROR_STATE', 409, 'Video is not in error status');
   }
 }
+
+export class VideoNotReadyException extends DomainException {
+  constructor() {
+    super('VIDEO_NOT_READY', 409, 'Video is not ready');
+  }
+}
