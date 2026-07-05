@@ -13,6 +13,8 @@ docker compose ps   # all services must show status "running"
 Then verify each infrastructure service is actually ready to accept connections — not just running:
 
 - **PostgreSQL:** `docker compose exec db pg_isready -U streamtube` — expect `accepting connections`
+- **Redis:** `docker compose exec redis redis-cli ping` — expect `PONG`
+- **MinIO:** `curl -f http://localhost:9000/minio/health/live` (from the host — the port is published) — expect HTTP 200
 
 Only start the NestJS dev server (`npm run start:dev`) when the user **explicitly** asks to run the application — never as part of "start the environment".
 
@@ -34,6 +36,10 @@ docker compose exec nestjs-api npm run start:dev
 Services:
 - `nestjs-api` — NestJS API, port `3000`
 - `db` — PostgreSQL 17, port `5432`, database `streamtube`, user/password `streamtube`
+- `mailpit` — SMTP capture for local dev, ports `1025` (SMTP) / `8025` (web UI)
+- `redis` — BullMQ queue backend, port `6379`
+- `minio` — S3-compatible object storage for video files/thumbnails, ports `9000` (API) / `9001` (console)
+- `worker` — standalone video-processing worker (`src/worker.ts`); idles by default (`tail -f /dev/null`), start explicitly: `docker compose exec worker npm run build && docker compose exec worker node dist/worker.js`
 
 All verification and teardown commands run on the **host machine**:
 
@@ -84,14 +90,15 @@ curl http://localhost:3000
 
 ### Test execution
 
-Integration and e2e suites share a single test database. They **must** be run with `--runInBand`:
+Integration and e2e suites share a single test database. `test`, `test:cov`, and `test:e2e` all have `--runInBand` baked into the npm script itself — no manual flag needed:
 
 ```bash
-docker compose exec nestjs-api npm test -- --runInBand
-docker compose exec nestjs-api npm run test:e2e   # already configured
+docker compose exec nestjs-api npm test
+docker compose exec nestjs-api npm run test:cov
+docker compose exec nestjs-api npm run test:e2e
 ```
 
-Parallel execution causes FK violations, deadlocks, and cross-suite contamination because suites truncate or seed shared tables concurrently.
+Parallel execution causes FK violations, deadlocks, and cross-suite contamination because suites truncate or seed shared tables concurrently — this is exactly what happens if you ever invoke `jest` directly without `--runInBand` (e.g. `npx jest some.spec.ts`), so don't drop the flag when working around the npm scripts.
 
 During active development, run only the tests related to the file being changed (`npm test -- path/to/file.spec.ts`). Before declaring a task done, run the full suite — see the global `CLAUDE.md` → "Definition of Done (Technical)".
 
@@ -148,6 +155,18 @@ NestJS with standard module structure. Source lives in `src/`, compiled output i
 
 - Each domain feature gets its own module (e.g., `UsersModule`, `VideosModule`) registered in `AppModule`
 - Controllers handle HTTP routing; Services hold business logic; both are scoped to their module
+
+### Videos Module (Fase 03)
+
+`src/videos/` — upload, background processing, and playback for videos, owned exclusively by the uploading channel.
+
+- **Entity:** `Video` (`entities/video.entity.ts`) — `channel_id` FK, `status` enum (`draft → processing → ready | error`), `storage_key`/`thumbnail_key`, `upload_id`, `retry_count`, `duration_seconds`.
+- **Upload flow:** presigned multipart upload direct to MinIO — the API never sees file bytes. `POST /videos` initiates, `GET /videos/:id/parts/:partNumber` presigns each part, `POST /videos/:id/complete` finalizes and enqueues processing.
+- **Processing:** `POST /videos/:id/complete` (and `POST /videos/:id/retry`) enqueue a `process-video` BullMQ job on the `video-processing` queue (Redis-backed). The job is consumed by a **separate standalone worker process** (`src/worker.ts` + `src/worker.module.ts`, `NestFactory.createApplicationContext`), never by `nestjs-api` itself — `VideoProcessor` (`src/videos/video.processor.ts`) is deliberately registered only in `WorkerModule`, not `VideosModule`, so the API process never runs a competing consumer.
+- **Storage:** `StorageService` (`src/videos/storage.service.ts`) wraps the `minio` client — multipart upload/presign/complete, plus `downloadToFile`/`uploadFile` (used by the worker) and `presignedGetObject` (used by streaming/download). Streaming and download (`GET /videos/:id/stream`, `GET /videos/:id/download`) are `302` redirects to short-lived presigned MinIO URLs — video bytes never pass through the API.
+- **Authorization:** every endpoint is owner-only (the authenticated user's channel must match the video's `channel_id`) — see `VideosService.findOwnedOrThrow`. No public/unlisted visibility model exists yet (planned for a later phase).
+- **Errors:** domain exceptions in `common/exceptions/domain.exception.ts` (`VIDEO_NOT_FOUND`, `VIDEO_ACCESS_FORBIDDEN`, `VIDEO_NOT_IN_DRAFT`, `VIDEO_NOT_IN_ERROR_STATE`, `VIDEO_NOT_READY`), mapped to HTTP responses by the existing `DomainExceptionFilter` — no parallel error-handling mechanism was introduced.
+- **Worker Dockerfile note:** `Dockerfile.worker`'s `CMD` idles by default (`tail -f /dev/null`), matching `nestjs-api`'s own `Dockerfile.dev` convention — start it explicitly (see the `worker` service entry above), it never auto-runs on `docker compose up`.
 
 ## Code Conventions
 
