@@ -1,3 +1,5 @@
+import { createWriteStream } from 'fs';
+import { pipeline } from 'stream/promises';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import { Client } from 'minio';
@@ -67,5 +69,25 @@ export class StorageService implements OnModuleInit {
       parts,
     );
     return result.etag;
+  }
+
+  async downloadToFile(key: string, filePath: string): Promise<void> {
+    // fGetObject's internal resumable-download temp-file handling
+    // (downloadToTmpFile) throws a spurious ENOENT under Jest/ts-jest —
+    // reproduced consistently and confirmed absent outside Jest. Using
+    // getObject + a plain pipeline avoids that code path entirely; we
+    // don't need resumable downloads for this worker's use case anyway.
+    const readStream = await this.client.getObject(this.bucket, key);
+    await pipeline(readStream, createWriteStream(filePath));
+  }
+
+  async uploadFile(
+    key: string,
+    filePath: string,
+    contentType: string,
+  ): Promise<void> {
+    await this.client.fPutObject(this.bucket, key, filePath, {
+      'Content-Type': contentType,
+    });
   }
 }

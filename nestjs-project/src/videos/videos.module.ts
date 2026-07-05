@@ -18,5 +18,6 @@ import { VideosService } from './videos.service';
   ],
   controllers: [VideosController],
   providers: [VideosService, StorageService],
+  exports: [TypeOrmModule, StorageService],
 })
 export class VideosModule {}
