@@ -1,7 +1,7 @@
 # phase-03-videos — Progress
 
 **Status:** in progress
-**SIs:** 5/7 completed
+**SIs:** 6/7 completed
 
 **Step 12 — Plan Test Specs:** skipped. Reasons:
 1. `docs/exercise.md` lists `/plan-test-specs` explicitly as `(opcional)` in its own pipeline description, and the exercise's Critérios de Aceite never references a test-spec artifact.
@@ -65,9 +65,13 @@ Real test coverage (unit/integration/e2e) is still mandatory per each SI's own `
   - `@Processor`/`WorkerHost`'s `@OnWorkerEvent('failed')` handler flips `status` to `error` only when `job.attemptsMade >= job.opts.attempts` (i.e., the final failed attempt) — intermediate retries are left alone, matching `phase-03-videos/TD-04`'s automatic-retries-before-error-status design. `retry_count` is untouched here (it's reserved for SI-03.6's manual retry, per the Data Model).
 
 ### SI-03.6 — Video Status Endpoint and Manual Retry
-- **Status:** pending
-- **Tests:** —
-- **Observations:** none
+- **Status:** completed
+- **Tests:** 8 new E2E tests passing (`videos.e2e-spec.ts`); full suite 161 unit/integration + 68 E2E green
+- **Observations:**
+  - `GET /videos/:id` and `POST /videos/:id/retry` implemented per the plan's Tests table (E2E only, no separate unit test file — unlike SI-03.4, the plan didn't call for isolated `VideosService` unit coverage here).
+  - Extracted a small `enqueueProcessing(videoId)` private helper in `VideosService`, reused by both `completeUpload` (SI-03.4) and the new `retryVideo` — same job name/attempts/backoff in both places, avoiding the duplication that would otherwise creep in.
+  - New `VideoNotInErrorStateException` (`VIDEO_NOT_IN_ERROR_STATE`, 409) added incrementally, matching this SI's needs only — same pattern as the other video exceptions.
+  - **Found and fixed a real bug via the E2E tests themselves:** adding 8 more tests (each doing a `registerConfirmAndLogin`) tipped `videos.e2e-spec.ts`'s cumulative auth-endpoint call count over the global `ThrottlerGuard`'s rate limit within the file's single shared app instance — later tests started getting `401`s instead of the expected status, and a knock-on `TypeORMError: Empty criteria(s) are not allowed for the update method` when a video `id` came back `undefined` from a throttled `createVideo` call. `auth.e2e-spec.ts` already had the fix for this exact class of problem (inject `ThrottlerStorage`, `.storage.clear()` in `beforeEach`) — applied the same pattern here, since `videos.e2e-spec.ts` had simply never needed it before (its test count was previously below the threshold).
 
 ### SI-03.7 — Streaming and Download Endpoints
 - **Status:** pending

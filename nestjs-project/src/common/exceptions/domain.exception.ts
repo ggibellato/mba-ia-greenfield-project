@@ -70,3 +70,9 @@ export class VideoNotInDraftException extends DomainException {
     super('VIDEO_NOT_IN_DRAFT', 409, 'Video is not in draft status');
   }
 }
+
+export class VideoNotInErrorStateException extends DomainException {
+  constructor() {
+    super('VIDEO_NOT_IN_ERROR_STATE', 409, 'Video is not in error status');
+  }
+}

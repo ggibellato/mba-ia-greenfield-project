@@ -1,6 +1,7 @@
 import { getQueueToken } from '@nestjs/bullmq';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { ThrottlerStorage, ThrottlerStorageService } from '@nestjs/throttler';
 import { Queue } from 'bullmq';
 import request, { Response } from 'supertest';
 import { App } from 'supertest/types';
@@ -19,6 +20,9 @@ interface VideoResponseBody {
   url?: string;
   status?: string;
   error?: string;
+  originalFilename?: string;
+  durationSeconds?: number | null;
+  createdAt?: string;
 }
 
 function body(res: Response): VideoResponseBody {
@@ -34,6 +38,7 @@ describe('Videos (e2e)', () => {
   let dataSource: DataSource;
   let videoRepository: Repository<Video>;
   let videoProcessingQueue: Queue;
+  let throttlerStorage: ThrottlerStorageService;
 
   beforeAll(async () => {
     const moduleFixture = await Test.createTestingModule({
@@ -57,6 +62,8 @@ describe('Videos (e2e)', () => {
     dataSource = moduleFixture.get(DataSource);
     videoRepository = dataSource.getRepository(Video);
     videoProcessingQueue = moduleFixture.get(getQueueToken('video-processing'));
+    throttlerStorage =
+      moduleFixture.get<ThrottlerStorageService>(ThrottlerStorage);
   });
 
   afterAll(async () => {
@@ -66,6 +73,7 @@ describe('Videos (e2e)', () => {
   beforeEach(async () => {
     await cleanAllTables(dataSource);
     await videoProcessingQueue.obliterate({ force: true });
+    throttlerStorage.storage.clear();
   });
 
   let userCounter = 0;
@@ -261,6 +269,104 @@ describe('Videos (e2e)', () => {
         .expect(400);
 
       expect(body(res).error).toBe('VALIDATION_ERROR');
+    });
+  });
+
+  describe('GET /videos/:id', () => {
+    it('returns 200 with the video status and metadata for the owning channel', async () => {
+      const accessToken = await registerConfirmAndLogin();
+      const { id } = await createVideo(accessToken);
+
+      const res = await request(app.getHttpServer())
+        .get(`/videos/${id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      expect(body(res).id).toBe(id);
+      expect(body(res).status).toBe('draft');
+      expect(body(res).originalFilename).toBe('my-video.mp4');
+      expect(body(res).durationSeconds).toBeNull();
+      expect(body(res).createdAt).toBeDefined();
+    });
+
+    it('returns 404 with VIDEO_NOT_FOUND for a non-existent video', async () => {
+      const accessToken = await registerConfirmAndLogin();
+
+      const res = await request(app.getHttpServer())
+        .get('/videos/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(404);
+
+      expect(body(res).error).toBe('VIDEO_NOT_FOUND');
+    });
+
+    it('returns 403 with VIDEO_ACCESS_FORBIDDEN for a video owned by a different channel', async () => {
+      const ownerToken = await registerConfirmAndLogin();
+      const otherToken = await registerConfirmAndLogin();
+      const { id } = await createVideo(ownerToken);
+
+      const res = await request(app.getHttpServer())
+        .get(`/videos/${id}`)
+        .set('Authorization', `Bearer ${otherToken}`)
+        .expect(403);
+
+      expect(body(res).error).toBe('VIDEO_ACCESS_FORBIDDEN');
+    });
+  });
+
+  describe('POST /videos/:id/retry', () => {
+    it('returns 200 with status processing, increments retry_count, and re-enqueues the job', async () => {
+      const accessToken = await registerConfirmAndLogin();
+      const { id } = await createVideo(accessToken);
+      await videoRepository.update(id, { status: VideoStatus.ERROR });
+
+      const res = await request(app.getHttpServer())
+        .post(`/videos/${id}/retry`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      expect(body(res).id).toBe(id);
+      expect(body(res).status).toBe('processing');
+
+      const video = await videoRepository.findOneBy({ id });
+      expect(video!.status).toBe(VideoStatus.PROCESSING);
+      expect(video!.retry_count).toBe(1);
+
+      const jobs = await videoProcessingQueue.getJobs([
+        'waiting',
+        'active',
+        'delayed',
+      ]);
+      expect(jobs).toHaveLength(1);
+      expect(jobs[0].name).toBe('process-video');
+      expect(jobs[0].data).toEqual({ videoId: id });
+    });
+
+    it('returns 409 with VIDEO_NOT_IN_ERROR_STATE for a ready video', async () => {
+      const accessToken = await registerConfirmAndLogin();
+      const { id } = await createVideo(accessToken);
+      await videoRepository.update(id, { status: VideoStatus.READY });
+
+      const res = await request(app.getHttpServer())
+        .post(`/videos/${id}/retry`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(409);
+
+      expect(body(res).error).toBe('VIDEO_NOT_IN_ERROR_STATE');
+    });
+
+    it('returns 403 with VIDEO_ACCESS_FORBIDDEN for a video owned by a different channel', async () => {
+      const ownerToken = await registerConfirmAndLogin();
+      const otherToken = await registerConfirmAndLogin();
+      const { id } = await createVideo(ownerToken);
+      await videoRepository.update(id, { status: VideoStatus.ERROR });
+
+      const res = await request(app.getHttpServer())
+        .post(`/videos/${id}/retry`)
+        .set('Authorization', `Bearer ${otherToken}`)
+        .expect(403);
+
+      expect(body(res).error).toBe('VIDEO_ACCESS_FORBIDDEN');
     });
   });
 });
