@@ -104,12 +104,12 @@ A aplicação ficará disponível em **http://localhost:3001**.
 
 ```bash
 cd nestjs-project
-docker compose exec nestjs-api npm test -- --runInBand   # unitários + integração
-docker compose exec nestjs-api npm run test:e2e          # end-to-end (HTTP via supertest, já configurado com --runInBand)
-docker compose exec nestjs-api npm run test:cov          # cobertura
+docker compose exec nestjs-api npm test           # unitários + integração (já configurado com --runInBand)
+docker compose exec nestjs-api npm run test:e2e   # end-to-end (HTTP via supertest, já configurado com --runInBand)
+docker compose exec nestjs-api npm run test:cov   # cobertura (já configurado com --runInBand)
 ```
 
-Sufixos: `*.spec.ts` (unitário), `*.integration-spec.ts` (integração com banco real), `*.e2e-spec.ts` (end-to-end). Os testes de integração compartilham um único banco Postgres, então **`--runInBand` é obrigatório** — sem ele, o Jest roda os arquivos em paralelo, causando violações de FK, deadlocks e corrupção de estado entre suites.
+Sufixos: `*.spec.ts` (unitário), `*.integration-spec.ts` (integração com banco real), `*.e2e-spec.ts` (end-to-end). Os testes de integração compartilham um único banco Postgres, então **`--runInBand` é obrigatório** — sem ele, o Jest roda os arquivos em paralelo, causando violações de FK, deadlocks e corrupção de estado entre suites. Os três scripts acima já embutem a flag.
 
 ### Frontend (Vitest + Playwright)
 
