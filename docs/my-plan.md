@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-05 — Steps 0–18 merged (PR #5–#25); SI-03.7 reviewed and approved on PR #26, pending merge (7/7 SIs — all Phase 03 implementation complete)._
+_Last updated: 2026-07-05 — Steps 0–19 merged (PR #5–#26); Step 20 (Closure) reviewed and approved on PR #27, pending merge — Phase 03 execution complete._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -125,11 +125,12 @@ _Last updated: 2026-07-05 — Steps 0–18 merged (PR #5–#25); SI-03.7 reviewe
   - [x] SI-03.7 — Streaming and Download Endpoints (Step 19, above)
   - [x] `docs/phases/phase-03-videos/progress.md` kept current after each SI — `Status: completed`, 7/7 SIs
 - [ ] **Step 20 — Closure**
-  - [ ] `nestjs-project/CLAUDE.md` updated with Videos section
-  - [ ] Root `CLAUDE.md` updated (queue/storage/worker no longer "TBD")
-  - [ ] Full Definition of Done green (whole suite + tsc + lint)
-  - [ ] Every `docs/exercise.md` acceptance-criteria checkbox walked and confirmed
-  - [ ] Committed on its own `feature/p03-s20-closure` branch; PR to `dev` opened per the branching strategy above
+  - [x] `nestjs-project/CLAUDE.md` updated with Videos section (also fixed stale Services list + Test execution wording)
+  - [x] Root `CLAUDE.md` updated (queue no longer "TBD"); `docs/diagrams/software-arch.mermaid` fixed too (exercise.md pairs it with CLAUDE.md)
+  - [x] Full Definition of Done green: `npm test` 161/161, `npm run test:e2e` 73/73, `npx tsc --noEmit` exit 0, `npm run lint` clean, `npm run build` clean
+  - [x] Every `docs/exercise.md` acceptance-criteria checkbox walked and confirmed (see PR #27 body for the full item-by-item walk)
+  - [x] Committed on its own `feature/p03-s20-closure` branch, PR [#27](https://github.com/ggibellato/mba-ia-greenfield-project/pull/27) opened against `dev`, reviewed and approved — pending merge
+  - [x] Follow-up: root `README.md` also fixed (stale "planejado" tags, phase status table) and extended (Vídeos subsection, project tree, stack table, services table) — confirmed with user before each addition
 
 ---
 
@@ -252,7 +253,9 @@ PR [#25](https://github.com/ggibellato/mba-ia-greenfield-project/pull/25): `GET 
 
 PR [#26](https://github.com/ggibellato/mba-ia-greenfield-project/pull/26): `StorageService.presignedGetObject`, `GET /videos/:id/stream` (owner + ready-status checks, `302` redirect to a presigned GET URL, Range support native to MinIO/S3), `GET /videos/:id/download` (same checks, redirect carries `response-content-disposition` for the original filename), new `VideoNotReadyException`. First use of NestJS's `@Redirect()` decorator in the project. 5 new E2E tests; full suite 161 unit/integration + 73 E2E green; all 3 plan ACs verified. **All 7 SIs of Phase 03 are now implemented.** Next: Step 20 — Closure.
 
-## Step 20 — Closure
+## Step 20 — Closure (done, reviewed)
+
+PR [#27](https://github.com/ggibellato/mba-ia-greenfield-project/pull/27): root `CLAUDE.md` and `docs/diagrams/software-arch.mermaid` updated (Message Queue no longer "TBD" — Redis + BullMQ named explicitly); `nestjs-project/CLAUDE.md` gets a new "Videos Module (Fase 03)" section (entity, upload flow, processing/worker split, storage, authorization, error codes, the `Dockerfile.worker` idle-by-default deviation) plus fixes to two stale sections (Services list was missing `mailpit`/`redis`/`minio`/`worker`; Test execution still asked for a manual `--runInBand` that's baked into the scripts now). Every claim in the new Videos section was cross-checked against the actual code before writing. Full DoD re-confirmed green: `npm test` 161/161, `npm run test:e2e` 73/73, `npx tsc --noEmit` exit 0, `npm run lint` clean, `npm run build` clean. Walked every `docs/exercise.md` Critérios de Aceite checkbox item-by-item in the PR body — all satisfied. This is the last step of the Phase 03 execution plan.
 
 1. Update `nestjs-project/CLAUDE.md` — add a Videos section (module layout, endpoints, queue/worker, storage) reflecting the actually-implemented code, extending the existing Architecture section rather than restating it.
 2. Update root `CLAUDE.md` — mark the Video Worker/Object Storage/Message Queue containers in the Architecture section as implemented, with the concrete tech chosen in research (replacing "TBD").
