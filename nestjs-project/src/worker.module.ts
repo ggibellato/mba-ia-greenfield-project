@@ -6,6 +6,7 @@ import databaseConfig from './config/database.config';
 import queueConfig from './config/queue.config';
 import storageConfig from './config/storage.config';
 import { envValidationSchema } from './config/env.validation';
+import { UsersModule } from './users/users.module';
 import { VideoProcessor } from './videos/video.processor';
 import { VideosModule } from './videos/videos.module';
 
@@ -38,6 +39,7 @@ import { VideosModule } from './videos/videos.module';
         connection: { host: qConfig.host, port: qConfig.port },
       }),
     }),
+    UsersModule,
     VideosModule,
   ],
   providers: [VideoProcessor],

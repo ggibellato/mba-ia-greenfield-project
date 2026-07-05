@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-05 — Steps 0–19 merged (PR #5–#26); Step 20 (Closure) reviewed and approved on PR #27, pending merge — Phase 03 execution complete._
+_Last updated: 2026-07-05 — Steps 0–20 merged (PR #5–#27) — Phase 03 execution complete. Post-closure verification pass done: full DoD re-run live, one real worker-boot bug found and fixed (see Step 20 entry below and `progress.md` SI-03.5)._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -100,21 +100,21 @@ _Last updated: 2026-07-05 — Steps 0–19 merged (PR #5–#26); Step 20 (Closur
   - [x] 4 unit tests passing (`videos.service.spec.ts`) + 3 new E2E tests passing; full suite 159 unit/integration + 62 E2E green
   - [x] E2E test caught a real bug: missing `@HttpCode(HttpStatus.OK)` made the endpoint return 201 instead of the plan's specified 200 — fixed
   - [x] Branch `feature/p03-s16-si-03-4` committed, pushed, PR [#22](https://github.com/ggibellato/mba-ia-greenfield-project/pull/22) opened against `dev`, reviewed, and merged
-- [ ] **Step 17 — Implementation: SI-03.5** (`/implement 03`)
+- [x] **Step 17 — Implementation: SI-03.5** (`/implement 03`)
   - [x] Standalone worker (`worker.ts`/`worker.module.ts`), `VideoProcessor` (`@Processor`/`WorkerHost`), `Dockerfile.worker` + `worker` compose service
   - [x] 2 integration tests passing (real MinIO + real Redis/BullMQ + real ffmpeg); full suite 161 unit/integration + 62 E2E green
   - [x] Found and fixed a real bug in `minio`'s `fGetObject` (spurious ENOENT under Jest/ts-jest) — worked around via `getObject` + manual pipeline
   - [x] Deliberate deviation flagged for review: `Dockerfile.worker`'s CMD idles by default (`tail -f /dev/null`), not the plan's literal `node dist/worker.js` — matches `nestjs-api`'s own never-auto-start convention
   - [x] Branch `feature/p03-s17-si-03-5` committed, pushed, PR [#23](https://github.com/ggibellato/mba-ia-greenfield-project/pull/23) opened against `dev`, reviewed, and merged
-- [ ] **Step 18 — Implementation: SI-03.6** (`/implement 03`)
+- [x] **Step 18 — Implementation: SI-03.6** (`/implement 03`)
   - [x] `GET /videos/:id`, `POST /videos/:id/retry`, `VideoNotInErrorStateException`, `enqueueProcessing` helper extracted for reuse
   - [x] 8 new E2E tests passing; full suite 161 unit/integration + 68 E2E green
   - [x] Found and fixed a real bug via the E2E tests: `videos.e2e-spec.ts` crossed the `ThrottlerGuard`'s rate limit as tests accumulated — applied `auth.e2e-spec.ts`'s existing `ThrottlerStorage.clear()` fix
   - [x] Branch `feature/p03-s18-si-03-6` committed, pushed, PR [#25](https://github.com/ggibellato/mba-ia-greenfield-project/pull/25) opened against `dev`, reviewed, and merged
-- [ ] **Step 19 — Implementation: SI-03.7** (`/implement 03`, final SI of Phase 03)
+- [x] **Step 19 — Implementation: SI-03.7** (`/implement 03`, final SI of Phase 03)
   - [x] `StorageService.presignedGetObject`, `GET /videos/:id/stream`, `GET /videos/:id/download`, `VideoNotReadyException`
   - [x] 5 new E2E tests passing; full suite 161 unit/integration + 73 E2E green — all 7 SIs of Phase 03 now implemented
-  - [x] Branch `feature/p03-s19-si-03-7` committed, pushed, PR [#26](https://github.com/ggibellato/mba-ia-greenfield-project/pull/26) opened against `dev`, reviewed and approved — pending merge
+  - [x] Branch `feature/p03-s19-si-03-7` committed, pushed, PR [#26](https://github.com/ggibellato/mba-ia-greenfield-project/pull/26) opened against `dev`, reviewed, and merged
 - [x] **Steps 13–19 summary — Implementation, one per SI** (`/implement 03`, resumed via `progress.md`)
   - [x] SI-03.1 — Dependencies, Configuration, and Docker Compose Additions (Step 13, above)
   - [x] SI-03.2 — Video Entity and Migration (Step 14, above)
@@ -124,13 +124,14 @@ _Last updated: 2026-07-05 — Steps 0–19 merged (PR #5–#26); Step 20 (Closur
   - [x] SI-03.6 — Video Status Endpoint and Manual Retry (Step 18, above)
   - [x] SI-03.7 — Streaming and Download Endpoints (Step 19, above)
   - [x] `docs/phases/phase-03-videos/progress.md` kept current after each SI — `Status: completed`, 7/7 SIs
-- [ ] **Step 20 — Closure**
+- [x] **Step 20 — Closure**
   - [x] `nestjs-project/CLAUDE.md` updated with Videos section (also fixed stale Services list + Test execution wording)
   - [x] Root `CLAUDE.md` updated (queue no longer "TBD"); `docs/diagrams/software-arch.mermaid` fixed too (exercise.md pairs it with CLAUDE.md)
   - [x] Full Definition of Done green: `npm test` 161/161, `npm run test:e2e` 73/73, `npx tsc --noEmit` exit 0, `npm run lint` clean, `npm run build` clean
   - [x] Every `docs/exercise.md` acceptance-criteria checkbox walked and confirmed (see PR #27 body for the full item-by-item walk)
-  - [x] Committed on its own `feature/p03-s20-closure` branch, PR [#27](https://github.com/ggibellato/mba-ia-greenfield-project/pull/27) opened against `dev`, reviewed and approved — pending merge
+  - [x] Committed on its own `feature/p03-s20-closure` branch, PR [#27](https://github.com/ggibellato/mba-ia-greenfield-project/pull/27) opened against `dev`, reviewed, approved, and merged
   - [x] Follow-up: root `README.md` also fixed (stale "planejado" tags, phase status table) and extended (Vídeos subsection, project tree, stack table, services table) — confirmed with user before each addition
+- [x] **Post-closure verification pass** — full DoD re-executed live (not just read from docs): `tsc`/lint clean, 161 unit/integration + 73 E2E green, plus a real HTTP smoke test (register → upload → complete → worker → stream/download). Found and fixed a real bug the automated suite missed: `WorkerModule` was missing `UsersModule`, crashing the standalone worker on boot (`Entity metadata for Channel#user was not found`) — see `progress.md` SI-03.5 observations for the full root-cause writeup. Fixed in `src/worker.module.ts`; re-verified end-to-end and re-ran the full DoD clean afterward.
 
 ---
 

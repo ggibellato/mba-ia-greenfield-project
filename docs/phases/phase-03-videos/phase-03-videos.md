@@ -397,18 +397,18 @@ SI-03.1 (root)
 
 ## Deliverables
 
-- [ ] SI-03.1 — Dependencies, Configuration, and Docker Compose Additions
-- [ ] SI-03.2 — Video Entity and Migration
-- [ ] SI-03.3 — Upload Initiation and Part Presigning
-- [ ] SI-03.4 — Upload Completion and Processing Job Enqueue
-- [ ] SI-03.5 — Video Worker: Metadata Extraction and Thumbnail Generation
-- [ ] SI-03.6 — Video Status Endpoint and Manual Retry
-- [ ] SI-03.7 — Streaming and Download Endpoints
+- [x] SI-03.1 — Dependencies, Configuration, and Docker Compose Additions
+- [x] SI-03.2 — Video Entity and Migration
+- [x] SI-03.3 — Upload Initiation and Part Presigning
+- [x] SI-03.4 — Upload Completion and Processing Job Enqueue
+- [x] SI-03.5 — Video Worker: Metadata Extraction and Thumbnail Generation
+- [x] SI-03.6 — Video Status Endpoint and Manual Retry
+- [x] SI-03.7 — Streaming and Download Endpoints
 
 **Full test suites** (per `nestjs-project/CLAUDE.md` — every command runs inside the container):
 
-- [ ] Backend unit + integration tests pass (`docker compose exec nestjs-api npm test -- --runInBand`)
-- [ ] E2E tests pass (`docker compose exec nestjs-api npm run test:e2e`)
-- [ ] Type-check passes (`docker compose exec nestjs-api npx tsc --noEmit`)
-- [ ] Lint passes (`docker compose exec nestjs-api npm run lint`)
-- [ ] `docker compose ps` shows `nestjs-api`, `db`, `mailpit`, `redis`, `minio`, and the `worker` service all healthy/running
+- [x] Backend unit + integration tests pass (`docker compose exec nestjs-api npm test -- --runInBand`)
+- [x] E2E tests pass (`docker compose exec nestjs-api npm run test:e2e`)
+- [x] Type-check passes (`docker compose exec nestjs-api npx tsc --noEmit`)
+- [x] Lint passes (`docker compose exec nestjs-api npm run lint`)
+- [x] `docker compose ps` shows `nestjs-api`, `db`, `mailpit`, `redis`, `minio`, and the `worker` service all healthy/running
