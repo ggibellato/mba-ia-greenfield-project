@@ -1,7 +1,7 @@
 # phase-03-videos — Progress
 
 **Status:** in progress
-**SIs:** 4/7 completed
+**SIs:** 5/7 completed
 
 **Step 12 — Plan Test Specs:** skipped. Reasons:
 1. `docs/exercise.md` lists `/plan-test-specs` explicitly as `(opcional)` in its own pipeline description, and the exercise's Critérios de Aceite never references a test-spec artifact.
@@ -53,9 +53,16 @@ Real test coverage (unit/integration/e2e) is still mandatory per each SI's own `
   - **Found and fixed a real bug via the E2E test, not just documentation this time:** the `POST /videos/:id/complete` controller method had no `@HttpCode(HttpStatus.OK)`, so Nest defaulted to `201 Created` for a POST — but the plan's API Contract explicitly specifies `200`. The E2E test (asserting `.expect(200)`) caught the mismatch immediately; fixed by adding the decorator.
 
 ### SI-03.5 — Video Worker: Metadata Extraction and Thumbnail Generation
-- **Status:** pending
-- **Tests:** —
-- **Observations:** none
+- **Status:** completed
+- **Tests:** 2 passing (`video.processor.integration-spec.ts`, real MinIO + real Redis/BullMQ + real ffmpeg); full suite 161 unit/integration + 62 E2E green
+- **Observations:**
+  - `ffmpeg` added to `Dockerfile.dev` (not just the new `Dockerfile.worker`) — the worker's own tests run via `docker compose exec nestjs-api npm test`, the same single container as every other test in this project, so it needs the real `ffmpeg`/`ffprobe` binaries too.
+  - `VideosModule` now exports `TypeOrmModule` + `StorageService`; `WorkerModule` (new, minimal — Config/TypeORM/BullMQ root registration + `VideosModule`) declares `VideoProcessor` as its own provider rather than adding it to `VideosModule` itself — otherwise the main API process would also instantiate a live BullMQ Worker competing with the dedicated worker process for the same jobs, defeating the point of a "standalone worker" (per `phase-03-videos/TD-03`).
+  - **Deviation from the plan's literal wording, flagged for visibility:** `Dockerfile.worker`'s `CMD` is `tail -f /dev/null` (idle by default), not `node dist/worker.js` as the plan's technical action #5 literally says. Matches this project's own established convention (`nestjs-api`'s `Dockerfile.dev` is also `tail -f /dev/null`, per `nestjs-project/CLAUDE.md`'s "never auto-start app servers automatically" rule) and avoids a crash-looping container on a fresh `docker compose up` before any build has run. Start it explicitly: `docker compose exec worker npm run build && docker compose exec worker node dist/worker.js`.
+  - **Found and fixed a real bug in a third-party library, not just this project's code:** `minio`'s `fGetObject` throws a spurious `ENOENT` on its internal resumable-download temp-file logic (`downloadToTmpFile`) specifically when run under Jest/ts-jest — reproduced consistently across many isolated experiments (confirmed absent when the exact same calls run via plain `node -e`, confirmed present via multiple minimal Jest repros, confirmed unrelated to TypeORM/NestJS DI/BullMQ). Worked around in `StorageService.downloadToFile` by using `getObject` (returns a stream) + a plain `stream/promises` `pipeline` to a write stream instead — avoids the buggy code path entirely, and we don't need resumable downloads for this worker's use case anyway.
+  - This bug hunt is also why this SI took unusually long: several "hangs" I chased afterward turned out to be a red herring — Jest buffers `console.log` output per test file and only flushes it when the file finishes, so a process that had *already finished* (or was stuck only in BullMQ's known "did not exit" lingering-connection issue, unrelated to correctness) looked indistinguishable from a genuinely stuck one until I let it run to completion or checked `ps` CPU deltas. Fixed the "did not exit" symptom too, by closing `processor.worker` and `queue` explicitly in `afterAll`.
+  - Strengthened the AC "thumbnail grabbed at 10%, not timestamp 0" from implicit (just checking `thumbnail_key` got set) to explicit: the valid-video test now generates a 5s clip that's red for the first 0.3s then green, and asserts the downloaded thumbnail's dominant pixel color is green — directly proving the 10% mark, not frame 0, was captured.
+  - `@Processor`/`WorkerHost`'s `@OnWorkerEvent('failed')` handler flips `status` to `error` only when `job.attemptsMade >= job.opts.attempts` (i.e., the final failed attempt) — intermediate retries are left alone, matching `phase-03-videos/TD-04`'s automatic-retries-before-error-status design. `retry_count` is untouched here (it's reserved for SI-03.6's manual retry, per the Data Model).
 
 ### SI-03.6 — Video Status Endpoint and Manual Retry
 - **Status:** pending

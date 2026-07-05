@@ -1,0 +1,45 @@
+import { Module } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
+import { ConfigModule, ConfigType } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import databaseConfig from './config/database.config';
+import queueConfig from './config/queue.config';
+import storageConfig from './config/storage.config';
+import { envValidationSchema } from './config/env.validation';
+import { VideoProcessor } from './videos/video.processor';
+import { VideosModule } from './videos/videos.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [databaseConfig, queueConfig, storageConfig],
+      validationSchema: envValidationSchema,
+      validationOptions: { allowUnknown: true, abortEarly: false },
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [databaseConfig.KEY],
+      useFactory: (dbConfig: ConfigType<typeof databaseConfig>) => ({
+        type: 'postgres',
+        host: dbConfig.host,
+        port: dbConfig.port,
+        username: dbConfig.username,
+        password: dbConfig.password,
+        database: dbConfig.name,
+        autoLoadEntities: true,
+        synchronize: false,
+      }),
+    }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [queueConfig.KEY],
+      useFactory: (qConfig: ConfigType<typeof queueConfig>) => ({
+        connection: { host: qConfig.host, port: qConfig.port },
+      }),
+    }),
+    VideosModule,
+  ],
+  providers: [VideoProcessor],
+})
+export class WorkerModule {}
