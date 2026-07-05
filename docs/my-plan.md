@@ -16,7 +16,7 @@ Each **skill invocation** in the project's planning/implementation pipeline (`do
 
 > Update this section as work happens — it is the persisted source of truth for what's done across sessions. Check an item only once its own verification (see "Verification" section below) has actually passed, not just "attempted."
 
-_Last updated: 2026-07-05 — Steps 0–18 merged (PR #5–#25); SI-03.7 done, PR #26 pending review (7/7 SIs — all Phase 03 implementation complete)._
+_Last updated: 2026-07-05 — Steps 0–18 merged (PR #5–#25); SI-03.7 reviewed and approved on PR #26, pending merge (7/7 SIs — all Phase 03 implementation complete)._
 
 - [x] **Step 0 — Setup**
   - [x] context7 registered in `.mcp.json` and verified via `claude mcp list`
@@ -114,7 +114,7 @@ _Last updated: 2026-07-05 — Steps 0–18 merged (PR #5–#25); SI-03.7 done, P
 - [ ] **Step 19 — Implementation: SI-03.7** (`/implement 03`, final SI of Phase 03)
   - [x] `StorageService.presignedGetObject`, `GET /videos/:id/stream`, `GET /videos/:id/download`, `VideoNotReadyException`
   - [x] 5 new E2E tests passing; full suite 161 unit/integration + 73 E2E green — all 7 SIs of Phase 03 now implemented
-  - [ ] Branch `feature/p03-s19-si-03-7` committed, pushed, PR [#26](https://github.com/ggibellato/mba-ia-greenfield-project/pull/26) opened against `dev` — pending manual review
+  - [x] Branch `feature/p03-s19-si-03-7` committed, pushed, PR [#26](https://github.com/ggibellato/mba-ia-greenfield-project/pull/26) opened against `dev`, reviewed and approved — pending merge
 - [x] **Steps 13–19 summary — Implementation, one per SI** (`/implement 03`, resumed via `progress.md`)
   - [x] SI-03.1 — Dependencies, Configuration, and Docker Compose Additions (Step 13, above)
   - [x] SI-03.2 — Video Entity and Migration (Step 14, above)
@@ -248,7 +248,7 @@ PR [#23](https://github.com/ggibellato/mba-ia-greenfield-project/pull/23): stand
 
 PR [#25](https://github.com/ggibellato/mba-ia-greenfield-project/pull/25): `GET /videos/:id` (owner check, status + metadata), `POST /videos/:id/retry` (owner + error-status checks, increments `retry_count`, re-enqueues `process-video`), new `VideoNotInErrorStateException`, `enqueueProcessing` helper extracted for reuse between `completeUpload` and `retryVideo`. 8 new E2E tests, matching the plan's Tests table (E2E only, no separate unit test called for here); full suite 161 unit/integration + 68 E2E green; all 4 plan ACs verified. Found and fixed a real bug via the E2E tests themselves: the growing test count in `videos.e2e-spec.ts` crossed the global `ThrottlerGuard`'s rate limit within the file's shared app instance — applied the same `ThrottlerStorage.clear()` fix `auth.e2e-spec.ts` already had for this exact problem.
 
-## Step 19 — Implementation: SI-03.7 (done, PR pending review — final SI of Phase 03)
+## Step 19 — Implementation: SI-03.7 (done, reviewed — final SI of Phase 03)
 
 PR [#26](https://github.com/ggibellato/mba-ia-greenfield-project/pull/26): `StorageService.presignedGetObject`, `GET /videos/:id/stream` (owner + ready-status checks, `302` redirect to a presigned GET URL, Range support native to MinIO/S3), `GET /videos/:id/download` (same checks, redirect carries `response-content-disposition` for the original filename), new `VideoNotReadyException`. First use of NestJS's `@Redirect()` decorator in the project. 5 new E2E tests; full suite 161 unit/integration + 73 E2E green; all 3 plan ACs verified. **All 7 SIs of Phase 03 are now implemented.** Next: Step 20 — Closure.
 
