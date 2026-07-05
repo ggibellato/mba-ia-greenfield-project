@@ -1,7 +1,7 @@
 # phase-03-videos — Progress
 
-**Status:** in progress
-**SIs:** 6/7 completed
+**Status:** completed
+**SIs:** 7/7 completed
 
 **Step 12 — Plan Test Specs:** skipped. Reasons:
 1. `docs/exercise.md` lists `/plan-test-specs` explicitly as `(opcional)` in its own pipeline description, and the exercise's Critérios de Aceite never references a test-spec artifact.
@@ -74,6 +74,10 @@ Real test coverage (unit/integration/e2e) is still mandatory per each SI's own `
   - **Found and fixed a real bug via the E2E tests themselves:** adding 8 more tests (each doing a `registerConfirmAndLogin`) tipped `videos.e2e-spec.ts`'s cumulative auth-endpoint call count over the global `ThrottlerGuard`'s rate limit within the file's single shared app instance — later tests started getting `401`s instead of the expected status, and a knock-on `TypeORMError: Empty criteria(s) are not allowed for the update method` when a video `id` came back `undefined` from a throttled `createVideo` call. `auth.e2e-spec.ts` already had the fix for this exact class of problem (inject `ThrottlerStorage`, `.storage.clear()` in `beforeEach`) — applied the same pattern here, since `videos.e2e-spec.ts` had simply never needed it before (its test count was previously below the threshold).
 
 ### SI-03.7 — Streaming and Download Endpoints
-- **Status:** pending
-- **Tests:** —
-- **Observations:** none
+- **Status:** completed
+- **Tests:** 5 new E2E tests passing (`videos.e2e-spec.ts`); full suite 161 unit/integration + 73 E2E green
+- **Observations:**
+  - `StorageService.presignedGetObject(key, expirySeconds?, respHeaders?)` added — the last of the three MinIO presign wrappers this phase needed (`initiateMultipartUpload`/`presignPartUpload` in SI-03.3, `completeMultipartUpload` in SI-03.3, this one in SI-03.7).
+  - Both endpoints use NestJS's `@Redirect()` decorator with a dynamic `{ url, statusCode: HttpStatus.FOUND }` return, rather than reaching for `@Res()` — first use of this pattern in the project, no precedent to mirror.
+  - `GET /videos/:id/download`'s presigned URL carries `response-content-disposition` as a MinIO/S3 query-string override, not a real HTTP response header set by this API — the client's browser only sees it once it follows the redirect and MinIO serves the object with that header attached.
+  - This closes out Phase 03's implementation: all 7 SIs done, full suite green (161 unit/integration + 73 E2E), `npx tsc --noEmit`/`npm run lint`/`npm run build` all clean.

@@ -7,6 +7,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Redirect,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -215,5 +216,73 @@ export class VideosController {
     @Param('id') id: string,
   ): Promise<{ id: string; status: VideoStatus }> {
     return this.videosService.retryVideo(user.sub, id);
+  }
+
+  @Get(':id/stream')
+  @Redirect()
+  @ApiOperation({
+    summary: 'Stream a video',
+    description:
+      'Redirects to a short-lived presigned MinIO URL that serves the video bytes, including Range support.',
+  })
+  @ApiResponse({
+    status: 302,
+    description: 'Redirect to a presigned MinIO URL',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Video is not owned by the authenticated channel',
+    schema: { $ref: getSchemaPath(ApiErrorEnvelope) },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Video not found',
+    schema: { $ref: getSchemaPath(ApiErrorEnvelope) },
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Video is not ready',
+    schema: { $ref: getSchemaPath(ApiErrorEnvelope) },
+  })
+  async stream(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+  ): Promise<{ url: string; statusCode: number }> {
+    const url = await this.videosService.getStreamUrl(user.sub, id);
+    return { url, statusCode: HttpStatus.FOUND };
+  }
+
+  @Get(':id/download')
+  @Redirect()
+  @ApiOperation({
+    summary: 'Download a video',
+    description:
+      'Redirects to a short-lived presigned MinIO URL that forces a file download via content-disposition.',
+  })
+  @ApiResponse({
+    status: 302,
+    description: 'Redirect to a presigned MinIO URL',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Video is not owned by the authenticated channel',
+    schema: { $ref: getSchemaPath(ApiErrorEnvelope) },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Video not found',
+    schema: { $ref: getSchemaPath(ApiErrorEnvelope) },
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Video is not ready',
+    schema: { $ref: getSchemaPath(ApiErrorEnvelope) },
+  })
+  async download(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+  ): Promise<{ url: string; statusCode: number }> {
+    const url = await this.videosService.getDownloadUrl(user.sub, id);
+    return { url, statusCode: HttpStatus.FOUND };
   }
 }

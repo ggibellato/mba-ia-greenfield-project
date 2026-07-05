@@ -369,4 +369,76 @@ describe('Videos (e2e)', () => {
       expect(body(res).error).toBe('VIDEO_ACCESS_FORBIDDEN');
     });
   });
+
+  describe('GET /videos/:id/stream', () => {
+    it('returns 302 with a Location header pointing to a presigned MinIO URL for a ready video', async () => {
+      const accessToken = await registerConfirmAndLogin();
+      const { id } = await createVideo(accessToken);
+      await videoRepository.update(id, { status: VideoStatus.READY });
+
+      const res = await request(app.getHttpServer())
+        .get(`/videos/${id}/stream`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(302);
+
+      expect(res.headers.location).toBeDefined();
+      expect(res.headers.location).toContain('http');
+    });
+
+    it('returns 409 with VIDEO_NOT_READY for a video not in ready status', async () => {
+      const accessToken = await registerConfirmAndLogin();
+      const { id } = await createVideo(accessToken);
+
+      const res = await request(app.getHttpServer())
+        .get(`/videos/${id}/stream`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(409);
+
+      expect(body(res).error).toBe('VIDEO_NOT_READY');
+    });
+
+    it('returns 403 with VIDEO_ACCESS_FORBIDDEN for a video owned by a different channel', async () => {
+      const ownerToken = await registerConfirmAndLogin();
+      const otherToken = await registerConfirmAndLogin();
+      const { id } = await createVideo(ownerToken);
+      await videoRepository.update(id, { status: VideoStatus.READY });
+
+      const res = await request(app.getHttpServer())
+        .get(`/videos/${id}/stream`)
+        .set('Authorization', `Bearer ${otherToken}`)
+        .expect(403);
+
+      expect(body(res).error).toBe('VIDEO_ACCESS_FORBIDDEN');
+    });
+  });
+
+  describe('GET /videos/:id/download', () => {
+    it('returns 302 with a Location header carrying a content-disposition for the original filename', async () => {
+      const accessToken = await registerConfirmAndLogin();
+      const { id } = await createVideo(accessToken);
+      await videoRepository.update(id, { status: VideoStatus.READY });
+
+      const res = await request(app.getHttpServer())
+        .get(`/videos/${id}/download`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(302);
+
+      const location = decodeURIComponent(res.headers.location);
+      expect(location).toContain('response-content-disposition=');
+      expect(location).toContain('attachment');
+      expect(location).toContain('my-video.mp4');
+    });
+
+    it('returns 409 with VIDEO_NOT_READY for a video not in ready status', async () => {
+      const accessToken = await registerConfirmAndLogin();
+      const { id } = await createVideo(accessToken);
+
+      const res = await request(app.getHttpServer())
+        .get(`/videos/${id}/download`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(409);
+
+      expect(body(res).error).toBe('VIDEO_NOT_READY');
+    });
+  });
 });
