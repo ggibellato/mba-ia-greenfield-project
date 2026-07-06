@@ -10,16 +10,15 @@ import mailConfig from './config/mail.config';
 import queueConfig from './config/queue.config';
 import storageConfig from './config/storage.config';
 import swaggerConfig from './config/swagger.config';
-import { envValidationSchema } from './config/env.validation';
+import { rootConfigOptions } from './config/root-config.options';
 import { DatabaseModule } from './database/database.module';
 import { QueueModule } from './queue/queue.module';
 import { VideosModule } from './videos/videos.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      load: [
+    ConfigModule.forRoot(
+      rootConfigOptions([
         appConfig,
         authConfig,
         databaseConfig,
@@ -27,10 +26,8 @@ import { VideosModule } from './videos/videos.module';
         swaggerConfig,
         queueConfig,
         storageConfig,
-      ],
-      validationSchema: envValidationSchema,
-      validationOptions: { allowUnknown: true, abortEarly: false },
-    }),
+      ]),
+    ),
     DatabaseModule,
     QueueModule,
     AuthModule,

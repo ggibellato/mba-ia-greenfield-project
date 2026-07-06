@@ -20,6 +20,5 @@ import databaseConfig from '../config/database.config';
       }),
     }),
   ],
-  exports: [TypeOrmModule],
 })
 export class DatabaseModule {}
