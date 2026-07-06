@@ -102,7 +102,7 @@ jobs:
           docker compose -f compose.yaml exec -T -d next-frontend sh -c "API_URL=http://nestjs-api:3000 SESSION_PASSWORD=test-session-secret-that-is-at-least-32ch MSW_ENABLED=true npm run dev > /tmp/dev.log 2>&1"
 
       - name: Wait for dev server to be ready
-        run: curl --retry 20 --retry-delay 2 --retry-connrefused -I http://localhost:3001
+        run: curl --retry 20 --retry-delay 2 --retry-all-errors -I http://localhost:3001
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
