@@ -99,7 +99,7 @@ jobs:
       - name: Start containerized dev server
         run: |
           docker compose -f compose.yaml up -d --build
-          docker compose -f compose.yaml exec -T -d next-frontend sh -c "API_URL=http://nestjs-api:3000 SESSION_PASSWORD=test-session-secret-that-is-at-least-32ch MSW_ENABLED=true npm run dev"
+          docker compose -f compose.yaml exec -T -d next-frontend sh -c "API_URL=http://nestjs-api:3000 SESSION_PASSWORD=test-session-secret-that-is-at-least-32ch MSW_ENABLED=true npm run dev > /tmp/dev.log 2>&1"
 
       - name: Wait for dev server to be ready
         run: curl --retry 20 --retry-delay 2 --retry-connrefused -I http://localhost:3001
@@ -109,6 +109,12 @@ jobs:
 
       - name: E2E tests
         run: npx playwright test
+
+      - name: Dump dev server logs on failure
+        if: failure()
+        run: |
+          docker compose -f compose.yaml exec -T next-frontend cat /tmp/dev.log || true
+          docker compose -f compose.yaml logs
 
       - name: Upload Playwright report on failure
         if: failure()
