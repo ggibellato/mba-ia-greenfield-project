@@ -61,8 +61,7 @@ export class VideosService {
     videoId: string,
     partNumber: number,
   ): Promise<{ url: string }> {
-    const channel = await this.requireChannel(userId);
-    const video = await this.findOwnedOrThrow(videoId, channel.id);
+    const video = await this.getOwnedVideo(userId, videoId);
 
     if (video.status !== VideoStatus.DRAFT) {
       throw new VideoNotInDraftException();
@@ -82,8 +81,7 @@ export class VideosService {
     videoId: string,
     dto: CompleteUploadDto,
   ): Promise<{ id: string; status: VideoStatus }> {
-    const channel = await this.requireChannel(userId);
-    const video = await this.findOwnedOrThrow(videoId, channel.id);
+    const video = await this.getOwnedVideo(userId, videoId);
 
     if (video.status !== VideoStatus.DRAFT) {
       throw new VideoNotInDraftException();
@@ -113,8 +111,7 @@ export class VideosService {
     durationSeconds: number | null;
     createdAt: Date;
   }> {
-    const channel = await this.requireChannel(userId);
-    const video = await this.findOwnedOrThrow(videoId, channel.id);
+    const video = await this.getOwnedVideo(userId, videoId);
 
     return {
       id: video.id,
@@ -129,8 +126,7 @@ export class VideosService {
     userId: string,
     videoId: string,
   ): Promise<{ id: string; status: VideoStatus }> {
-    const channel = await this.requireChannel(userId);
-    const video = await this.findOwnedOrThrow(videoId, channel.id);
+    const video = await this.getOwnedVideo(userId, videoId);
 
     if (video.status !== VideoStatus.ERROR) {
       throw new VideoNotInErrorStateException();
@@ -146,8 +142,7 @@ export class VideosService {
   }
 
   async getStreamUrl(userId: string, videoId: string): Promise<string> {
-    const channel = await this.requireChannel(userId);
-    const video = await this.findOwnedOrThrow(videoId, channel.id);
+    const video = await this.getOwnedVideo(userId, videoId);
 
     if (video.status !== VideoStatus.READY) {
       throw new VideoNotReadyException();
@@ -157,8 +152,7 @@ export class VideosService {
   }
 
   async getDownloadUrl(userId: string, videoId: string): Promise<string> {
-    const channel = await this.requireChannel(userId);
-    const video = await this.findOwnedOrThrow(videoId, channel.id);
+    const video = await this.getOwnedVideo(userId, videoId);
 
     if (video.status !== VideoStatus.READY) {
       throw new VideoNotReadyException();
@@ -169,7 +163,15 @@ export class VideosService {
     });
   }
 
-  async findOwnedOrThrow(videoId: string, channelId: string): Promise<Video> {
+  private async getOwnedVideo(userId: string, videoId: string): Promise<Video> {
+    const channel = await this.requireChannel(userId);
+    return this.findOwnedOrThrow(videoId, channel.id);
+  }
+
+  private async findOwnedOrThrow(
+    videoId: string,
+    channelId: string,
+  ): Promise<Video> {
     const video = await this.videoRepository.findOneBy({ id: videoId });
     if (!video) {
       throw new VideoNotFoundException();
