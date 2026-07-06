@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nestjs-project
+    steps:
+      - name: Guard against manual dispatch on dev/main
+        if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
+        run: |
+          echo "::error::Manual dispatch is not allowed on dev or main -- these branches are only meant to be validated via push (i.e. merges)."
+          exit 1
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create .env
+        run: cp .env.example .env
+
+      - name: Fix checkout ownership for containerized user
+        run: sudo chown -R 1000:1000 .
+
+      - name: Start infrastructure and API containers
+        run: docker compose -f compose.yaml up -d --build nestjs-api db mailpit redis minio
+
+      - name: Wait for nestjs-api container to be ready
+        run: |
+          for i in $(seq 1 30); do
+            docker compose -f compose.yaml exec -T nestjs-api true && break
+            sleep 2
+          done
+
+      - name: Install dependencies
+        run: docker compose -f compose.yaml exec -T nestjs-api npm ci
+
+      - name: Run database migrations
+        run: docker compose -f compose.yaml exec -T nestjs-api npm run migration:run
+
+      - name: Type-check
+        run: docker compose -f compose.yaml exec -T nestjs-api npx tsc --noEmit
+
+      - name: Lint
+        run: docker compose -f compose.yaml exec -T nestjs-api npm run lint:check
+
+      - name: Unit + integration tests
+        run: docker compose -f compose.yaml exec -T nestjs-api npm test
+
+      - name: E2E tests
+        run: docker compose -f compose.yaml exec -T nestjs-api npm run test:e2e
+
+      - name: Build
+        run: docker compose -f compose.yaml exec -T nestjs-api npm run build
+
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose -f compose.yaml logs
+
+      - name: Tear down containers
+        if: always()
+        run: docker compose -f compose.yaml down -v
