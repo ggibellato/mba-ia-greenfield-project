@@ -1,8 +1,8 @@
 name: CI
 
 on:
-  pull_request:
-    branches: [dev]
+  push:
+  workflow_dispatch:
 
 jobs:
   backend:
@@ -11,6 +11,12 @@ jobs:
       run:
         working-directory: nestjs-project
     steps:
+      - name: Guard against manual dispatch on dev/main
+        if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
+        run: |
+          echo "::error::Manual dispatch is not allowed on dev or main -- these branches are only meant to be validated via push (i.e. merges)."
+          exit 1
+
       - name: Checkout
         uses: actions/checkout@v4
 
