@@ -13,6 +13,5 @@ import queueConfig from '../config/queue.config';
       }),
     }),
   ],
-  exports: [BullModule],
 })
 export class QueueModule {}
